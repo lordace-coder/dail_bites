@@ -118,8 +118,15 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildProfileHeader() {
-    final user = context.read<PocketbaseServiceCubit>().state.pb.authStore.model
-        as RecordModel;
+    print(context
+        .read<PocketbaseServiceCubit>()
+        .state
+        .pb
+        .authStore
+        .model
+        .runtimeType);
+    final user =
+        context.read<PocketbaseServiceCubit>().state.pb.authStore.model;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -148,10 +155,10 @@ class _AccountScreenState extends State<AccountScreen> {
                     color: Colors.white,
                     width: 3,
                   ),
-                  image: user.data['avatar'].toString().isNotEmpty
+                  image: user['avatar'].toString().isNotEmpty
                       ? DecorationImage(
                           image: NetworkImage(
-                            user.data['avatar']
+                            user['avatar']
                                 .toString(), // Replace with actual user image
                           ),
                           fit: BoxFit.cover,
@@ -175,7 +182,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            '${user.data['username']}',
+            '${user['username']}',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -184,7 +191,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${user.data['email']}',
+            '${user['email']}',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,
@@ -234,20 +241,7 @@ class _AccountScreenState extends State<AccountScreen> {
             pinned: true,
             elevation: 0,
             backgroundColor: Theme.of(context).primaryColor,
-            actions: [
-              IconButton(
-                icon: Icon(
-                  isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  setState(() {
-                    isDarkMode = !isDarkMode;
-                    // Implement theme switching logic here
-                  });
-                },
-              ),
-            ],
+            leading: Container(),
           ),
 
           // Profile Header

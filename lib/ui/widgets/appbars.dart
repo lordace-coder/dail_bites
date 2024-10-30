@@ -1,4 +1,6 @@
+import 'package:dail_bites/bloc/cart/cubit.dart';
 import 'package:dail_bites/bloc/products/product_cubit.dart';
+import 'package:dail_bites/ui/pages/cart_page.dart';
 import 'package:dail_bites/ui/pages/home_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +63,7 @@ class _GenericAppBarState extends State<GenericAppBar>
     final String searchQuery = _searchController.text;
     print('Performing search for: $searchQuery');
     if (!widget.currentPage) {
-      AppRouter().navigateTo(HomePage(
+      AppRouter().navigateAndRemoveUntil(HomePage(
         query: searchQuery,
       ));
     } else {
@@ -154,41 +156,49 @@ class _GenericAppBarState extends State<GenericAppBar>
             icon: const Icon(Icons.search),
             onPressed: _startSearch,
           ),
-        Stack(
-          alignment: Alignment.topRight,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.shopping_cart,
-                color: Colors.white,
-              ),
-              onPressed: () {},
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 16,
-                  minHeight: 16,
-                ),
-                child: const Text(
-                  '3',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10,
+        Builder(builder: (context) {
+          final cartCount = context.watch<CartCubit>().getItemCount();
+          return GestureDetector(
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.shopping_cart,
                     color: Colors.white,
                   ),
+                  onPressed: () {
+                    AppRouter().navigateTo(const CartPage());
+                  },
                 ),
-              ),
+                if (cartCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '$cartCount',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          );
+        }),
       ],
     );
   }

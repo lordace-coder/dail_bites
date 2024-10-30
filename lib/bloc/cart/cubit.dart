@@ -1,4 +1,6 @@
 import 'package:dail_bites/bloc/cart/state.dart';
+import 'package:dail_bites/bloc/products/product_state.dart';
+import 'package:dail_bites/ui/widgets/toasts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CartCubit extends Cubit<CartState> {
@@ -6,20 +8,30 @@ class CartCubit extends Cubit<CartState> {
 
   final List<CartItem> _items = [];
 
-  // Add item to cart
-  void addToCart(CartItem item) {
-    final existingItemIndex = _items.indexWhere((i) => i.id == item.id);
+  void addToCart(Product product, {int quantity = 1}) {
+    final cartItem = CartItem(
+      id: product.id,
+      name: product.title,
+      price: product.price.toDouble(),
+      quantity: quantity,
+      image: product.imageUrl.toString(),
+      discountPrice: product.discountPrice!.toInt(),
+    );
+
+    final existingItemIndex = _items.indexWhere((i) => i.id == cartItem.id);
 
     if (existingItemIndex != -1) {
       // Item exists, update quantity
       _items[existingItemIndex] = _items[existingItemIndex].copyWith(
-        quantity: _items[existingItemIndex].quantity + item.quantity,
+        quantity: _items[existingItemIndex].quantity + quantity,
       );
     } else {
       // New item, add to cart
-      _items.add(item);
+      _items.add(cartItem);
     }
-
+    showSucces(
+        title: 'Succesfull',
+        description: 'Product has been added to your cart');
     _emitLoadedState();
   }
 
@@ -68,7 +80,8 @@ class CartCubit extends Cubit<CartState> {
   int getItemQuantity(String itemId) {
     final item = _items.firstWhere(
       (item) => item.id == itemId,
-      orElse: () => CartItem(id: itemId, name: '', price: 0, quantity: 0),
+      orElse: () => CartItem(
+          id: itemId, name: '', price: 0, quantity: 0, discountPrice: 0),
     );
     return item.quantity;
   }
