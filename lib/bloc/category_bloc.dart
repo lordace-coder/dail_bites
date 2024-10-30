@@ -8,17 +8,19 @@ class CategoryCubit extends Cubit<CategoryState> {
   CategoryCubit({required this.pocketBase}) : super(CategoryInitial());
 
   Future<void> fetchCategories() async {
+    if (state is CategoryLoaded) {
+      return;
+    }
     try {
       emit(CategoryLoading());
 
-      final records = await pocketBase
-          .collection('categories')
-          .getFullList();
-
-      final categories = records.map((record) => Category.fromJson({
-            'id': record.id,
-            'category': record.data['category'],
-          })).toList();
+      final records = await pocketBase.collection('categories').getFullList();
+      final categories = records
+          .map((record) => Category.fromJson({
+                'id': record.id,
+                'category': record.data['category'],
+              }))
+          .toList();
 
       emit(CategoryLoaded(categories));
     } catch (e) {

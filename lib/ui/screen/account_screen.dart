@@ -118,9 +118,9 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildProfileHeader() {
-    final user =
-        context.read<PocketbaseServiceCubit>().state.pb.authStore.model.data;
-    print(user['avatar'].toString().isEmpty);
+    final user = context.read<PocketbaseServiceCubit>().state.pb.authStore.model
+        as RecordModel;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -148,10 +148,10 @@ class _AccountScreenState extends State<AccountScreen> {
                     color: Colors.white,
                     width: 3,
                   ),
-                  image: user['avatar'].toString().isNotEmpty
+                  image: user.data['avatar'].toString().isNotEmpty
                       ? DecorationImage(
                           image: NetworkImage(
-                            user['avatar']
+                            user.data['avatar']
                                 .toString(), // Replace with actual user image
                           ),
                           fit: BoxFit.cover,
@@ -175,7 +175,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            '${user['username']}',
+            '${user.data['username']}',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -184,7 +184,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${user['email']}',
+            '${user.data['email']}',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,

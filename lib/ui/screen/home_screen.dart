@@ -1,185 +1,276 @@
+import 'package:dail_bites/bloc/category_bloc.dart';
+import 'package:dail_bites/bloc/category_state.dart';
+import 'package:dail_bites/bloc/products/product_cubit.dart';
+import 'package:dail_bites/bloc/products/product_state.dart';
+import 'package:dail_bites/ui/routes/routes.dart';
+import 'package:dail_bites/ui/widgets/toasts.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
+import 'package:dail_bites/ui/pages/product_detail_page.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.query});
+  final String? query;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<String> categories = [
-    'All',
-    'Phone Accessories',
-    'Fish BBQ',
-    'Fish Feed',
-    'Pet Supplies',
-    'Electronics',
-    'New Arrivals',
-    'Deals'
-  ];
-
   String selectedCategory = 'All';
-
+  bool loading = false;
   final ScrollController _scrollController = ScrollController();
+
+  void handleSelectedCategory(String selection, String id) {
+    final productCubit = context.read<ProductCubit>();
+    print([selectedCategory == selection]);
+    // reset if previously selected
+    if (selectedCategory == selection) {
+      setState(() {
+        selectedCategory = 'all';
+      });
+      productCubit.fetchAllProducts();
+      print([selectedCategory == selection]);
+      return;
+    }
+
+    final catState = context.read<CategoryCubit>().state;
+    setState(() {
+      selectedCategory = selection;
+    });
+    if (catState is CategoryLoaded) {
+      productCubit.fetchProductsByCategory(id);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<CategoryCubit>();
+      final productCubit = context.read<ProductCubit>();
+      // if widget.query then perform search
+      if (widget.query != null) {
+        print('searching for ${widget.query}');
+        setState(() {
+          loading = true;
+        });
+        productCubit.searchProducts(widget.query!).then((x) {
+          setState(() {
+            loading = false;
+          });
+        });
+        return;
+      }
+
+      if (state.state is CategoryLoaded && productCubit.state is ProductLoaded)
+        return;
+      setState(() {
+        loading = true;
+      });
+      state.fetchCategories();
+      // fetch products
+      final products = productCubit.fetchAllProducts().then((_) {
+        final data = context.read<ProductCubit>().state;
+        if (data is ProductLoaded) {
+          print(data.products[0]);
+        }
+        setState(() {
+          loading = false;
+        });
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      controller: _scrollController,
-      slivers: [
-        // Categories FilterChip Row
-        SliverToBoxAdapter(
-          child: Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: categories.map((category) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      selected: selectedCategory == category,
-                      label: Text(category),
-                      onSelected: (selected) {
-                        setState(() {
-                          selectedCategory = category;
-                        });
+    return RefreshIndicator.adaptive(
+      onRefresh: () async {
+        await context.read<CategoryCubit>().fetchCategories();
+        await context.read<ProductCubit>().fetchAllProducts();
+      },
+      child: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // Categories FilterChip Row
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: BlocConsumer<CategoryCubit, CategoryState>(
+                      listener: (context, state) {
+                        // TODO: implement listener
+                        if (state is CategoryError) {
+                          showError(context,
+                              title: 'Error Occured',
+                              description: 'Error occured loading categories');
+                        }
                       },
-                      backgroundColor: Colors.grey[200],
-                      selectedColor: Colors.blue[100],
-                      checkmarkColor: Colors.blue[900],
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ),
-
-        // Promotional Banner
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 200,
-            child: PageView.builder(
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    gradient: LinearGradient(
-                      colors: index == 0
-                          ? [Colors.blue[700]!, Colors.blue[900]!]
-                          : index == 1
-                              ? [Colors.orange[700]!, Colors.orange[900]!]
-                              : [Colors.green[700]!, Colors.green[900]!],
+                      builder: (context, state) {
+                        if (state is CategoryLoading) {
+                          return Container();
+                        } else if (state is CategoryLoaded) {
+                          return Row(
+                            children: state.categories.map((category) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: FilterChip(
+                                  selected:
+                                      selectedCategory == category.category,
+                                  label: Text(category.category),
+                                  onSelected: (selected) {
+                                    handleSelectedCategory(
+                                        category.category, category.id);
+                                  },
+                                  backgroundColor: Colors.grey[200],
+                                  selectedColor: Colors.blue[100],
+                                  checkmarkColor: Colors.blue[900],
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        } else {
+                          return Container();
+                        }
+                      },
                     ),
                   ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 20,
-                        top: 40,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+              ),
+              // Promotional Banner
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 200,
+                  child: PageView.builder(
+                    itemCount: 3,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          gradient: LinearGradient(
+                            colors: index == 0
+                                ? [Colors.blue[700]!, Colors.blue[900]!]
+                                : index == 1
+                                    ? [Colors.orange[700]!, Colors.orange[900]!]
+                                    : [Colors.green[700]!, Colors.green[900]!],
+                          ),
+                        ),
+                        child: Stack(
                           children: [
-                            Text(
-                              index == 0
-                                  ? 'New Arrivals'
-                                  : index == 1
-                                      ? 'Special Deals'
-                                      : 'Flash Sale',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                            Positioned(
+                              left: 20,
+                              top: 40,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    index == 0
+                                        ? 'New Arrivals'
+                                        : index == 1
+                                            ? 'Special Deals'
+                                            : 'Flash Sale',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Up to 50% off',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () {},
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.blue[900],
+                                    ),
+                                    child: const Text('Shop Now'),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Up to 50% off',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.blue[900],
-                              ),
-                              child: const Text('Shop Now'),
                             ),
                           ],
                         ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              // Products Grid
+              BlocConsumer<ProductCubit, ProductState>(
+                listener: (context, state) {
+                  // TODO: implement listener
+                },
+                builder: (context, state) {
+                  if (state is ProductLoaded) {
+                    // show empty for search cases
+                    if (state.products.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Lottie.network(
+                                  'https://lottie.host/31751360-9047-45f8-8da6-05e38e8cd3f9/TAcbqsv4mT.json',
+                                  height: 200),
+                              const Text('No Results '),
+                              const Text('Try Refreshing Instead'),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return SliverPadding(
+                      padding: const EdgeInsets.all(16),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) =>
+                              _buildProductCard(product: state.products[index]),
+                          childCount: state.products.length,
+                        ),
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    );
+                  }
+                  return const SliverToBoxAdapter();
+                },
+              ),
+            ],
           ),
-        ),
-
-        // Quick Links
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Quick Links',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 4,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  children: [
-                    _buildQuickLink(
-                        Icons.local_offer, 'Deals', Colors.red[400]!),
-                    _buildQuickLink(Icons.star, 'Featured', Colors.amber[700]!),
-                    _buildQuickLink(
-                        Icons.new_releases, 'New', Colors.blue[400]!),
-                    _buildQuickLink(
-                        Icons.trending_up, 'Trending', Colors.green[400]!),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Products Grid
-        SliverPadding(
-          padding: const EdgeInsets.all(16),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => _buildProductCard(),
-              childCount: 6,
-            ),
-          ),
-        ),
-      ],
+          if (loading)
+            Positioned(
+                top: 0,
+                right: 0,
+                left: 0,
+                bottom: 0,
+                child: Container(
+                  color: Colors.white,
+                  child: Lottie.asset('assets/lottie/anim1.json'),
+                ))
+        ],
+      ),
     );
   }
 
@@ -213,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProductCard() {
+  Widget _buildProductCard({required Product product}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -235,42 +326,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[200],
+                image: DecorationImage(
+                    image: Image.network(product.imageUrl.toString()).image),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Icon(
-                      Icons.image,
-                      size: 50,
-                      color: Colors.grey[400],
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        '20% OFF',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
@@ -284,7 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Product Name',
+                    product.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -295,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     children: [
                       Text(
-                        '₦29.99',
+                        '₦${product.price}',
                         style: TextStyle(
                           color: Colors.blue[900],
                           fontWeight: FontWeight.bold,
@@ -304,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '₦39.99',
+                        '₦${product.discountPrice}',
                         style: TextStyle(
                           color: Colors.grey[600],
                           decoration: TextDecoration.lineThrough,
@@ -315,19 +375,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.star,
-                        size: 16,
-                        color: Colors.amber,
-                      ),
-                      const Text(
-                        '4.5',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                       Text(
-                        ' (2.5k)',
+                        product.count!.toInt().toString(),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,
@@ -340,10 +389,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.blue[900],
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
-                          Icons.add_shopping_cart,
-                          color: Colors.white,
-                          size: 16,
+                        child: GestureDetector(
+                          onTap: () {
+                            AppRouter().navigateTo(ProductDisplay(
+                              product: product,
+                            ));
+                          },
+                          child: const Icon(
+                            Icons.add_shopping_cart,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ],

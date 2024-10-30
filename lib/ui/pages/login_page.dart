@@ -1,6 +1,7 @@
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
 import 'package:dail_bites/ui/pages/signup_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
+import 'package:dail_bites/ui/widgets/toasts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -69,13 +70,14 @@ class _LoginPageState extends State<LoginPage>
           .authWithPassword(email.text.trim(), password.text.trim());
       return;
     } on ClientException catch (e) {
-      print(e);
       if (e.statusCode == 400) {
-        // invalid logs
+        showError(context,
+            title: 'Invalid Data', description: 'invalid login details');
         return;
-      } else {
-        // an unknown error occured
       }
+      showError(context,
+          title: 'Unknown Error', description: 'An unknown error occured');
+      print(e.response);
     }
     await Future.delayed(const Duration(seconds: 2));
 
@@ -305,46 +307,6 @@ class _LoginPageState extends State<LoginPage>
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    'Or continue with',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 24),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Expanded(
-                                          child: _buildSocialButton(
-                                            'Google',
-                                            () {},
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: _buildSocialButton(
-                                            'Facebook',
-                                            () {},
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: _buildSocialButton(
-                                            'Apple',
-                                            () {},
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -378,18 +340,6 @@ class _LoginPageState extends State<LoginPage>
                     ),
                   ),
                 ),
-                if (loading)
-                  Positioned(
-                      top: 0,
-                      right: 0,
-                      left: 0,
-                      bottom: 0,
-                      child: Container(
-                        color: Colors.white,
-                        child: Center(
-                          child: Lottie.asset('assets/lottie/anim1.json'),
-                        ),
-                      ))
               ],
             );
           },

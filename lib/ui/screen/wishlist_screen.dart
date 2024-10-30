@@ -166,9 +166,6 @@ class _WishlistScreenState extends State<WishlistScreen>
               ],
             ),
 
-            // Enhanced Floating Action Button
-            _buildFloatingActionButton(),
-
             // Delete Confirmation Dialog
             if (_showDeleteDialog) _buildDeleteDialog(theme),
           ],

@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:dail_bites/bloc/ads/cubit.dart';
+import 'package:dail_bites/bloc/cart/cubit.dart';
+import 'package:dail_bites/bloc/category_bloc.dart';
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_state.dart';
 import 'package:dail_bites/bloc/products/product_cubit.dart';
@@ -10,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:toastification/toastification.dart' as toast;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,21 +23,35 @@ void main() async {
 // check for token from shared preferences here and add it to the pocketbase
   pb.initialize();
 
-  runApp(MultiBlocProvider(
-    providers: [
-      BlocProvider(
-        lazy: false,
-        create: (context) {
-          return pb;
-        },
-      ),
-      BlocProvider(
-        create: (context) => ProductCubit(pocketBase: pb.pb),
-        child: Container(),
-      )
-    ],
-    child: const MainApp(),
-  ),);
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<PocketbaseServiceCubit>(
+          lazy: false,
+          create: (context) {
+            return pb;
+          },
+        ),
+        BlocProvider<ProductCubit>(
+          create: (context) => ProductCubit(pocketBase: pb.pb),
+        ),
+        BlocProvider<CategoryCubit>(
+          create: (context) => CategoryCubit(pocketBase: pb.pb),
+        ),
+        BlocProvider<CartCubit>(
+          create: (context) => CartCubit(),
+        ),
+        BlocProvider<AdsCubit>(create: (context) {
+          final ad = AdsCubit(
+            pb: pb.pb,
+          );
+          ad.fetchRandomAds();
+          return ad;
+        }),
+      ],
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatefulWidget {
@@ -77,14 +95,18 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: AppRouter().navigatorKey,
-      debugShowCheckedModeBanner: false,
-      home: BlocBuilder<PocketbaseServiceCubit, BackendService>(
-        builder: (context, pb) {
-          // Use a builder to determine initial route
-          return pb.pb.authStore.isValid ? const HomePage() : const LoginPage();
-        },
+    return toast.ToastificationWrapper(
+      child: MaterialApp(
+        navigatorKey: AppRouter().navigatorKey,
+        debugShowCheckedModeBanner: false,
+        home: BlocBuilder<PocketbaseServiceCubit, BackendService>(
+          builder: (context, pb) {
+            // Use a builder to determine initial route
+            return pb.pb.authStore.isValid
+                ? const HomePage()
+                : const LoginPage();
+          },
+        ),
       ),
     );
   }
