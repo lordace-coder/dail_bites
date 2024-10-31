@@ -1,4 +1,5 @@
 import 'package:dail_bites/bloc/products/product_state.dart';
+import 'package:dail_bites/ui/widgets/toasts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pocketbase/pocketbase.dart';
 
@@ -25,8 +26,9 @@ class ProductCubit extends Cubit<ProductState> {
       print(products[0]);
       emit(ProductLoaded(products));
     } catch (e) {
-      print(e);
-      emit(ProductError(e.toString()));
+      showError(null,
+          title: 'Error Occured', description: 'Connection or server error');
+      emit(const ProductLoaded([]));
     }
   }
 

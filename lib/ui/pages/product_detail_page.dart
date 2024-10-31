@@ -80,7 +80,7 @@ class _ProductDisplayState extends State<ProductDisplay>
                 child: Stack(
                   children: [
                     Hero(
-                      tag: 'product-${widget.product.id}',
+                      tag: 'product_${widget.product.id}',
                       child: Container(
                         height: MediaQuery.of(context).size.height * 0.35,
                         width: double.infinity,

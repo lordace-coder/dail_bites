@@ -16,12 +16,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart' as toast;
 
 void main() async {
+  // const String baseUrl = 'https://dailbit.pockethost.io'; //'http://10.0.2.2:8000';
+  const String baseUrl = 'http://10.0.2.2:8090';
+
   WidgetsFlutterBinding.ensureInitialized();
   final pref = await SharedPreferences.getInstance();
+  final store = AsyncAuthStore(
+    save: (String data) async => pref.setString('pb_auth', data),
+    initial: pref.getString('pb_auth'),
+  );
   final pb = PocketbaseServiceCubit(
-      prefs: pref, pb: PocketBase('http://10.0.2.2:8090'));
-// check for token from shared preferences here and add it to the pocketbase
-  pb.initialize();
+      prefs: pref, pb: PocketBase(baseUrl, authStore: store));
 
   runApp(
     MultiBlocProvider(
@@ -29,6 +34,7 @@ void main() async {
         BlocProvider<PocketbaseServiceCubit>(
           lazy: false,
           create: (context) {
+            pb.pb.collection('users').authRefresh();
             return pb;
           },
         ),
@@ -41,13 +47,16 @@ void main() async {
         BlocProvider<CartCubit>(
           create: (context) => CartCubit(),
         ),
-        BlocProvider<AdsCubit>(create: (context) {
-          final ad = AdsCubit(
-            pb: pb.pb,
-          );
-          ad.fetchRandomAds();
-          return ad;
-        }),
+        BlocProvider<AdsCubit>(
+          create: (context) {
+            final ad = AdsCubit(
+              pb: pb.pb,
+            );
+            ad.fetchRandomAds();
+            return ad;
+          },
+          lazy: false,
+        ),
       ],
       child: const MainApp(),
     ),

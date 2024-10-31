@@ -17,7 +17,11 @@ class _CartPageState extends State<CartPage> {
   // Sample cart items - in real app, this would come from your state management solution
 
   List<CartItem> getCartItems() {
-    return (context.read<CartCubit>().state as CartLoaded).items;
+    final cartCubit = context.read<CartCubit>();
+    if (cartCubit.state is CartLoaded) {
+      return (cartCubit.state as CartLoaded).items;
+    }
+    return [];
   }
 
   double calculateTotal() {
@@ -80,7 +84,7 @@ class _CartPageState extends State<CartPage> {
           ElevatedButton(
             onPressed: () {
               // Navigate to products page
-              AppRouter().navigateTo(const HomePage());
+              AppRouter().navigateAndRemoveUntil(const HomePage());
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),

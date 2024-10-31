@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:dail_bites/ui/pages/home_page.dart';
+import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -59,36 +61,6 @@ class _WishlistScreenState extends State<WishlistScreen>
         });
       });
     _controller.forward();
-    _loadSampleData();
-  }
-
-  void _loadSampleData() {
-    _items.addAll([
-      WishlistItem(
-        id: '1',
-        name: 'Premium Wireless Headphones',
-        category: 'Electronics',
-        price: 299.99,
-        imageUrl: 'https://example.com/headphones.jpg',
-        rating: 4.8,
-        reviewCount: 234,
-        discount: 15,
-        availability: 'In Stock',
-        dateAdded: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      WishlistItem(
-        id: '2',
-        name: 'Ergonomic Office Chair',
-        category: 'Furniture',
-        price: 499.99,
-        imageUrl: 'https://example.com/chair.jpg',
-        rating: 4.5,
-        reviewCount: 189,
-        discount: null,
-        availability: 'Low Stock',
-        dateAdded: DateTime.now().subtract(const Duration(days: 5)),
-      ),
-    ]);
   }
 
   @override
@@ -96,14 +68,6 @@ class _WishlistScreenState extends State<WishlistScreen>
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _removeItem(String id) {
-    setState(() {
-      _items.removeWhere((item) => item.id == id);
-      _showDeleteDialog = false;
-      _itemToDelete = null;
-    });
   }
 
   void _showDeleteConfirmation(String id) {
@@ -160,7 +124,6 @@ class _WishlistScreenState extends State<WishlistScreen>
 
                 // Wishlist Items
                 if (_items.isNotEmpty) ...[
-                  _buildCategoryFilter(),
                   _buildWishlistItems(theme),
                 ],
               ],
@@ -204,6 +167,7 @@ class _WishlistScreenState extends State<WishlistScreen>
           ElevatedButton.icon(
             onPressed: () {
               // Navigate to products or categories
+              AppRouter().navigateAndRemoveUntil(const HomePage());
             },
             icon: const Icon(Icons.shopping_bag_outlined),
             label: const Text('Start Shopping'),
@@ -438,7 +402,9 @@ class _WishlistScreenState extends State<WishlistScreen>
             size: 28,
           ),
         ),
-        onDismissed: (direction) => _removeItem(item.id),
+        onDismissed: (direction) {
+          // remove item from wishlist
+        },
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -893,7 +859,7 @@ class _WishlistScreenState extends State<WishlistScreen>
                     child: ElevatedButton(
                       onPressed: () {
                         if (_itemToDelete != null) {
-                          _removeItem(_itemToDelete!);
+// remove item
                         }
                       },
                       style: ElevatedButton.styleFrom(

@@ -11,7 +11,8 @@ dependencies:
     sdk: flutter
   flutter_bloc: ^8.1.6
   pocketbase: ^0.18.1
-
+  flutter_staggered_grid_view:
+  cached_network_image: 
   bloc: ^8.1.4
   dio: ^5.7.0
   shared_preferences: ^2.3.2

@@ -126,7 +126,7 @@ class _AccountScreenState extends State<AccountScreen> {
         .model
         .runtimeType);
     final user =
-        context.read<PocketbaseServiceCubit>().state.pb.authStore.model;
+        context.read<PocketbaseServiceCubit>().state.pb.authStore.model.data;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -263,36 +263,18 @@ class _AccountScreenState extends State<AccountScreen> {
                     // Navigate to orders screen
                   },
                 ),
-                _buildProfileAction(
-                  Icons.location_on_outlined,
-                  'Shipping Addresses',
-                  'Manage delivery addresses',
-                  iconColor: Colors.green,
-                ),
-                _buildProfileAction(
-                  Icons.payment_outlined,
-                  'Payment Methods',
-                  'Manage your payment options',
-                  iconColor: Colors.purple,
-                ),
-                _buildProfileAction(
-                  Icons.notifications_outlined,
-                  'Notifications',
-                  'Manage your notification preferences',
-                  iconColor: Colors.orange,
-                  trailing: Switch(
-                    value: true,
-                    onChanged: (value) {
-                      // Handle notification toggle
-                    },
-                  ),
-                ),
-                _buildProfileAction(
-                  Icons.security_outlined,
-                  'Security',
-                  'Manage your security settings',
-                  iconColor: Colors.red,
-                ),
+                // _buildProfileAction(
+                //   Icons.notifications_outlined,
+                //   'Notifications',
+                //   'Manage your notification preferences',
+                //   iconColor: Colors.orange,
+                //   trailing: Switch(
+                //     value: true,
+                //     onChanged: (value) {
+                //       // Handle notification toggle
+                //     },
+                //   ),
+                // ),
                 _buildProfileAction(
                   Icons.help_outline,
                   'Help & Support',

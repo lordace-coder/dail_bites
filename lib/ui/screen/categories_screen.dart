@@ -1,10 +1,14 @@
+import 'package:dail_bites/bloc/category_bloc.dart';
+import 'package:dail_bites/bloc/category_state.dart';
+import 'package:dail_bites/ui/pages/product_category_page.dart';
+import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CategoriesScreen extends StatelessWidget {
   CategoriesScreen({super.key});
 
-  // List of predefined colors for random selection
   final List<Color> _colors = [
     Colors.blue[400] ?? Colors.blue,
     Colors.purple[400] ?? Colors.purple,
@@ -16,109 +20,52 @@ class CategoriesScreen extends StatelessWidget {
     Colors.red[400] ?? Colors.red,
   ];
 
-  // Get random color from the colors list
+  // List of category icons
+  final List<IconData> _categoryIcons = [
+    Icons.lunch_dining,
+    Icons.local_pizza,
+    Icons.breakfast_dining,
+    Icons.restaurant,
+    Icons.coffee,
+    Icons.fastfood,
+    Icons.cake,
+    Icons.local_bar,
+  ];
+
   Color _getRandomColor() {
     return _colors[Random().nextInt(_colors.length)];
   }
 
-  final List<Map<String, dynamic>> categories = [
-    {'name': 'Electronics', 'icon': Icons.devices, 'items': '2,543 items'},
-    {
-      'name': 'Phone Accessories',
-      'icon': Icons.phone_android,
-      'items': '1,234 items'
-    },
-    {'name': 'Fish BBQ', 'icon': Icons.set_meal, 'items': '867 items'},
-    {'name': 'Fish Feed', 'icon': Icons.pets, 'items': '654 items'},
-    {
-      'name': 'Pet Supplies',
-      'icon': Icons.pets_outlined,
-      'items': '1,432 items'
-    },
-  ];
+  IconData _getRandomIcon() {
+    return _categoryIcons[Random().nextInt(_categoryIcons.length)];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final categories =
+        (context.watch<CategoryCubit>().state as CategoryLoaded).categories;
+
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // App Bar
             SliverAppBar(
+              expandedHeight: 80,
               floating: true,
+              pinned: true,
               elevation: 0,
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              title: Text(
-                'Categories',
-                style: TextStyle(
-                  color: Colors.grey[800],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              actions: [
-                IconButton(
-                  icon: Icon(
-                    Icons.filter_list,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  'Export Different Categories',
+                  style: TextStyle(
                     color: Colors.grey[800],
-                  ),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-
-            // Search Bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.grey[300] ?? Colors.grey,
-                    ),
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search categories',
-                      border: InputBorder.none,
-                      icon: Icon(
-                        Icons.search,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
                   ),
                 ),
-              ),
-            ),
-
-            // Featured Categories Header
-            SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Featured Categories',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Explore our wide range of products',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
+                centerTitle: true,
               ),
             ),
 
@@ -131,85 +78,109 @@ class CategoriesScreen extends StatelessWidget {
                       MediaQuery.of(context).size.width > 600 ? 3 : 2,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 1.1,
+                  childAspectRatio: 0.85,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final category = categories[index];
                     final Color randomColor = _getRandomColor();
+                    final IconData randomIcon = _getRandomIcon();
 
-                    return Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          // Add navigation
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.1),
-                                spreadRadius: 1,
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Stack(
-                            children: [
-                              // Background Icon
-                              Positioned(
-                                right: -20,
-                                bottom: -20,
-                                child: Icon(
-                                  category['icon'] as IconData,
-                                  size: 100,
-                                  color: randomColor.withOpacity(0.1),
-                                ),
-                              ),
-                              // Content
-                              Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: randomColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        category['icon'] as IconData,
-                                        color: randomColor,
-                                        size: 24,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      category['name'] as String,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      category['items'] as String,
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
+                    return Hero(
+                      tag: 'category_${category.category}',
+                      child: Material(
+                        color: Colors.transparent,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          child: InkWell(
+                            onTap: () {
+                              // Add navigation with scale animation
+                              AppRouter().navigateTo(CategoryProductsScreen(
+                                  categoryId: category.id,
+                                  categoryName: category.category));
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    randomColor.withOpacity(0.7),
+                                    randomColor,
                                   ],
                                 ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: randomColor.withOpacity(0.3),
+                                    spreadRadius: 1,
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                            ],
+                              child: Stack(
+                                children: [
+                                  // Background pattern
+                                  Positioned(
+                                    right: -20,
+                                    top: -20,
+                                    child: Icon(
+                                      randomIcon,
+                                      size: 100,
+                                      color: Colors.white.withOpacity(0.2),
+                                    ),
+                                  ),
+                                  // Content
+                                  Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Icon(
+                                          randomIcon,
+                                          color: Colors.white,
+                                          size: 32,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          category.category,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          child: const Text(
+                                            'Explore →',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -220,7 +191,6 @@ class CategoriesScreen extends StatelessWidget {
               ),
             ),
 
-            // Bottom padding
             const SliverToBoxAdapter(
               child: SizedBox(height: 16),
             ),

@@ -1,11 +1,18 @@
+import 'dart:async';
+
+import 'package:dail_bites/bloc/ads/cubit.dart';
+import 'package:dail_bites/bloc/ads/state.dart';
 import 'package:dail_bites/bloc/category_bloc.dart';
 import 'package:dail_bites/bloc/category_state.dart';
 import 'package:dail_bites/bloc/products/product_cubit.dart';
 import 'package:dail_bites/bloc/products/product_state.dart';
+import 'package:dail_bites/provider/customer_support.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:dail_bites/ui/widgets/toasts.dart';
+import 'package:dail_bites/ui/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:lottie/lottie.dart';
 import 'package:dail_bites/ui/pages/product_detail_page.dart';
 
@@ -21,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
   bool loading = false;
   final ScrollController _scrollController = ScrollController();
-
+  PageController pageController = PageController();
   void handleSelectedCategory(String selection, String id) {
     final productCubit = context.read<ProductCubit>();
     print([selectedCategory == selection]);
@@ -44,18 +51,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Timer? timer;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = context.read<CategoryCubit>();
       final productCubit = context.read<ProductCubit>();
+      // check if ad hasnt been loaded then load ad
+      final adCubit = context.read<AdsCubit>();
+      if (adCubit.state is! AdsLoaded) {
+        adCubit.fetchRandomAds();
+        print('fetching ads from home page ----');
+      }
       // if widget.query then perform search
       if (widget.query != null) {
         print('searching for ${widget.query}');
         setState(() {
           loading = true;
         });
+
         productCubit.searchProducts(widget.query!).then((x) {
           setState(() {
             loading = false;
@@ -71,16 +86,52 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       state.fetchCategories();
       // fetch products
-      final products = productCubit.fetchAllProducts().then((_) {
-        final data = context.read<ProductCubit>().state;
-        if (data is ProductLoaded) {
-          print(data.products[0]);
-        }
+      productCubit.fetchAllProducts().then((_) {
         setState(() {
           loading = false;
         });
       });
     });
+  }
+
+  void startAutoSlide(PageController pageController, int itemCount) {
+    // Cancel any existing timer to avoid duplicates
+
+    void createTimer() {
+      timer?.cancel();
+
+      // Only create timer if we have more than one page
+      if (itemCount > 1) {
+        timer = Timer.periodic(const Duration(seconds: 7), (Timer t) {
+          // Check if controller is still active
+          if (pageController.hasClients) {
+            final currentPage = pageController.page?.round() ?? 0;
+
+            // Calculate next page, going back to 0 if at end
+            final nextPage = currentPage + 1 >= itemCount ? 0 : currentPage + 1;
+
+            try {
+              pageController.animateToPage(
+                nextPage,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            } catch (e) {
+              // Handle any animation errors
+              timer?.cancel();
+            }
+          }
+        });
+      }
+    }
+
+    createTimer();
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -147,72 +198,99 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               // Promotional Banner
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 200,
-                  child: PageView.builder(
-                    itemCount: 3,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          gradient: LinearGradient(
-                            colors: index == 0
-                                ? [Colors.blue[700]!, Colors.blue[900]!]
-                                : index == 1
-                                    ? [Colors.orange[700]!, Colors.orange[900]!]
-                                    : [Colors.green[700]!, Colors.green[900]!],
-                          ),
-                        ),
-                        child: Stack(
-                          children: [
-                            Positioned(
-                              left: 20,
-                              top: 40,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+              BlocConsumer<AdsCubit, AdsState>(
+                listener: (context, state) {
+                  // TODO: implement listener
+                },
+                builder: (context, state) {
+                  if (state is AdsLoaded && state.ads.isNotEmpty) {
+                    print(state.ads[0].data);
+                    // increment ad view
+                    return SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 200,
+                        child: PageView.builder(
+                          controller: pageController,
+                          itemCount: state.ads.length,
+                          itemBuilder: (context, index) {
+                            final adData = context
+                                .read<AdsCubit>()
+                                .getAdData(state.ads[index]);
+
+                            return Container(
+                              margin: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                    colorFilter: ColorFilter.mode(
+                                      Colors.black.withOpacity(
+                                          0.5), // Adjust opacity between 0.0 and 1.0
+                                      BlendMode.darken,
+                                    ),
+                                    image:
+                                        Image.network(adData!['image']).image,
+                                    fit: BoxFit.cover),
+                              ),
+                              child: Stack(
                                 children: [
-                                  Text(
-                                    index == 0
-                                        ? 'New Arrivals'
-                                        : index == 1
-                                            ? 'Special Deals'
-                                            : 'Flash Sale',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
+                                  Positioned(
+                                    left: 20,
+                                    top: 40,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          adData['title'],
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.86,
+                                          child: Text(
+                                            adData['description'],
+                                            style: TextStyle(
+                                              color:
+                                                  Colors.white.withOpacity(0.9),
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            await launchLink(
+                                                adData['location']);
+                                            context
+                                                .read<AdsCubit>()
+                                                .incrementClicks(adData['id']);
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            foregroundColor: Colors.blue[900],
+                                          ),
+                                          child: const Text('Shop Now'),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Up to 50% off',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.blue[900],
-                                    ),
-                                    child: const Text('Shop Now'),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    );
+                  }
+                  return const SliverToBoxAdapter();
+                },
               ),
-
               // Products Grid
               BlocConsumer<ProductCubit, ProductState>(
                 listener: (context, state) {
@@ -238,19 +316,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                     return SliverPadding(
                       padding: const EdgeInsets.all(16),
-                      sliver: SliverGrid(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) =>
-                              _buildProductCard(product: state.products[index]),
-                          childCount: state.products.length,
-                        ),
+                      sliver: SliverMasonryGrid.count(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        childCount: state.products
+                            .length, // Replace with actual product count
+                        itemBuilder: (context, index) {
+                          return ProductCard(
+                            product: state.products[index],
+                          );
+                        },
                       ),
                     );
                   }

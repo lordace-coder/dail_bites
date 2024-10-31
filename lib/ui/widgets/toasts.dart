@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 
-void showError(BuildContext context,
+void showError(BuildContext? context ,
     {required String title, required String description}) {
   toastification.show(
     type: ToastificationType.error,
