@@ -29,7 +29,6 @@ class AdsCubit extends Cubit<AdsState> {
         incrementViews(records.items[i].id);
       }
     } catch (e) {
-      print('error fetching ads $e');
       emit(AdsError(e.toString()));
     }
   }
@@ -56,13 +55,11 @@ class AdsCubit extends Cubit<AdsState> {
     try {
       final record = await pb.collection('ads').getOne(adId);
       final currentViews = record.getDoubleValue('views');
-      print([currentViews, 'current views']);
       await pb.collection('ads').update(adId, body: {
         'views': currentViews + 1,
       });
     } catch (e) {
       // Handle error silently or emit a specific state if needed
-      print('error $e');
     }
   }
 

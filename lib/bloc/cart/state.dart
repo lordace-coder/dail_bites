@@ -94,27 +94,27 @@ class CartItem {
 }
 
 // State
-abstract class CartState {
-  const CartState();
-}
+
+abstract class CartState {}
 
 class CartInitial extends CartState {}
+
+class CartLoading extends CartState {}
 
 class CartLoaded extends CartState {
   final List<CartItem> items;
   final double total;
 
-  const CartLoaded({
+  CartLoaded({
     required this.items,
     required this.total,
   });
+}
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is CartLoaded && other.items == items && other.total == total;
-  }
+class CartOrderSuccess extends CartState {}
 
-  @override
-  int get hashCode => items.hashCode ^ total.hashCode;
+class CartError extends CartState {
+  final String message;
+
+  CartError({required this.message});
 }

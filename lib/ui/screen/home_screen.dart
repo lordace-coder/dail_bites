@@ -31,14 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
   PageController pageController = PageController();
   void handleSelectedCategory(String selection, String id) {
     final productCubit = context.read<ProductCubit>();
-    print([selectedCategory == selection]);
     // reset if previously selected
     if (selectedCategory == selection) {
       setState(() {
         selectedCategory = 'all';
       });
       productCubit.fetchAllProducts();
-      print([selectedCategory == selection]);
       return;
     }
 
@@ -66,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       // if widget.query then perform search
       if (widget.query != null) {
-        print('searching for ${widget.query}');
         setState(() {
           loading = true;
         });
@@ -79,8 +76,9 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      if (state.state is CategoryLoaded && productCubit.state is ProductLoaded)
+      if (state.state is CategoryLoaded && productCubit.state is ProductLoaded) {
         return;
+      }
       setState(() {
         loading = true;
       });
@@ -204,7 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 builder: (context, state) {
                   if (state is AdsLoaded && state.ads.isNotEmpty) {
-                    print(state.ads[0].data);
                     // increment ad view
                     return SliverToBoxAdapter(
                       child: SizedBox(

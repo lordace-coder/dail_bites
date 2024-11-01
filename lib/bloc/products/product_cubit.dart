@@ -23,12 +23,11 @@ class ProductCubit extends Cubit<ProductState> {
                 'image': pocketBase.files.getUrl(record, record.data['image']),
               }))
           .toList();
-      print(products[0]);
       emit(ProductLoaded(products));
     } catch (e) {
       showError(null,
           title: 'Error Occured', description: 'Connection or server error');
-      emit(const ProductLoaded([]));
+      emit(ProductLoaded([]));
     }
   }
 
@@ -50,9 +49,9 @@ class ProductCubit extends Cubit<ProductState> {
                 'image': pocketBase.files.getUrl(record, record.data['image']),
               }))
           .toList();
-      emit(ProductLoaded(products));
+      emit(ProductLoaded((state as ProductLoaded).products,
+          productsForCategory: products));
     } catch (e) {
-      print(e);
       emit(ProductError(e.toString()));
     }
   }
@@ -94,7 +93,6 @@ class ProductCubit extends Cubit<ProductState> {
 
       emit(ProductLoaded(products));
     } catch (e) {
-      print('Search error: $e');
       emit(ProductError(e.toString()));
     }
   }
@@ -141,7 +139,6 @@ class ProductCubit extends Cubit<ProductState> {
 
       emit(ProductLoaded(products));
     } catch (e) {
-      print('Paginated search error: $e');
       emit(ProductError(e.toString()));
     }
   }

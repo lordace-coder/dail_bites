@@ -1,4 +1,3 @@
-import 'package:dail_bites/bloc/cart/cubit.dart';
 import 'package:dail_bites/bloc/products/product_cubit.dart';
 import 'package:dail_bites/ui/pages/cart_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
@@ -6,8 +5,6 @@ import 'package:dail_bites/ui/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'dart:ui';
 import 'package:dail_bites/bloc/products/product_state.dart';
 import 'package:lottie/lottie.dart';
 
@@ -33,6 +30,9 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductCubit>().fetchProductsByCategory(widget.categoryId);
+    });
   }
 
   void _onScroll() {
@@ -115,13 +115,13 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                 },
                 builder: (context, state) {
                   if (state is ProductLoaded) {
-                    if (state.products.isEmpty) {
+                    if (state.productsForCategory.isEmpty) {
                       return SliverToBoxAdapter(
                         child: SizedBox(
                           height: 300,
                           child: Center(
-                            child: Lottie.asset(
-                              'assets/lottie/anim1.json',
+                            child: Lottie.network(
+                             'https://lottie.host/31751360-9047-45f8-8da6-05e38e8cd3f9/TAcbqsv4mT.json',
                               backgroundLoading: true,
                               repeat: true,
                               reverse: true,
@@ -147,8 +147,18 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     );
                   }
 
-                  return Container(
-                    height: 200,
+                  return SliverToBoxAdapter(
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Lottie.network(
+                              'https://lottie.host/31751360-9047-45f8-8da6-05e38e8cd3f9/TAcbqsv4mT.json',
+                              height: 200),
+                          const Text('No Results '),
+                          const Text('Try Refreshing Instead'),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),

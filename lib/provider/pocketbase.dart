@@ -17,6 +17,5 @@ Future<void> updateAvatar(File avatarFile, PocketBase pb) async {
     // Refresh the user data
     await pb.collection('users').authRefresh();
   } catch (error) {
-    print('Error updating avatar: $error');
   }
 }

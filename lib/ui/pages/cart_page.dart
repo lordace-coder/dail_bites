@@ -1,10 +1,12 @@
 import 'package:dail_bites/bloc/cart/cubit.dart';
 import 'package:dail_bites/bloc/cart/state.dart';
-import 'package:dail_bites/bloc/products/product_state.dart';
+import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
+import 'package:dail_bites/provider/paystack_payment.dart';
 import 'package:dail_bites/ui/pages/home_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pocketbase/pocketbase.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -17,11 +19,7 @@ class _CartPageState extends State<CartPage> {
   // Sample cart items - in real app, this would come from your state management solution
 
   List<CartItem> getCartItems() {
-    final cartCubit = context.read<CartCubit>();
-    if (cartCubit.state is CartLoaded) {
-      return (cartCubit.state as CartLoaded).items;
-    }
-    return [];
+    return context.read<CartCubit>().items;
   }
 
   double calculateTotal() {
@@ -288,8 +286,76 @@ class _CartPageState extends State<CartPage> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                // Navigate to checkout
+              onPressed: () async {
+                final TextEditingController locationController =
+                    TextEditingController();
+                final TextEditingController contactController =
+                    TextEditingController();
+
+                final result = await showDialog<Map<String, String>>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Delivery Details'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            controller: locationController,
+                            decoration: const InputDecoration(
+                              labelText: 'Delivery Location',
+                              hintText: 'Enter your delivery address',
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: contactController,
+                            decoration: const InputDecoration(
+                              labelText: 'Contact Number',
+                              hintText: 'Enter your phone number',
+                            ),
+                            keyboardType: TextInputType.phone,
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            if (locationController.text.isEmpty ||
+                                contactController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please fill in all fields'),
+                                ),
+                              );
+                              return;
+                            }
+                            Navigator.pop(context, {
+                              'location': locationController.text,
+                              'contact': contactController.text,
+                            });
+                          },
+                          child: const Text('Confirm'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                // If user provided both location and contact, proceed with order
+                if (result != null) {
+                  context.read<CartCubit>().completeOrder(
+                        context,
+                        location: result['location']!,
+                        contact: result['contact']!,
+                        amount: calculateTotal(),
+                      );
+                }
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),

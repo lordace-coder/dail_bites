@@ -1,12 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dail_bites/bloc/cart/cubit.dart';
+import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
 import 'package:dail_bites/bloc/products/product_state.dart';
+import 'package:dail_bites/bloc/wishlist/state.dart';
 import 'package:dail_bites/ui/pages/product_detail_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pocketbase/pocketbase.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   final Product product;
 
   const ProductCard({
@@ -15,10 +18,28 @@ class ProductCard extends StatelessWidget {
   });
 
   @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  bool? inWishlist ;
+  void checkWishlist() {
+    if (inWishlist != null) return;
+    setState(() {
+      inWishlist = context.read<WishlistCubit>().isInWishlist(widget.product);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final wishlistCubit = context.read<WishlistCubit>();
+    final userId = (context.read<PocketbaseServiceCubit>().pb.authStore.model
+            as RecordModel)
+        .id;
+    checkWishlist();
     return GestureDetector(
       onTap: () {
-        AppRouter().navigateTo(ProductDisplay(product: product));
+        AppRouter().navigateTo(ProductDisplay(product: widget.product));
       },
       child: Container(
         decoration: BoxDecoration(
@@ -44,9 +65,9 @@ class ProductCard extends StatelessWidget {
                   children: [
                     // Product Image
                     Hero(
-                      tag: 'product_${product.id}',
+                      tag: 'product_${widget.product.id}',
                       child: CachedNetworkImage(
-                        imageUrl: product.imageUrl.toString(),
+                        imageUrl: widget.product.imageUrl.toString(),
                         fit: BoxFit.cover,
                         width: double.infinity,
                         placeholder: (context, url) => Container(
@@ -58,22 +79,38 @@ class ProductCard extends StatelessWidget {
                     Positioned(
                       top: 12,
                       right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.favorite_border,
-                          size: 20,
-                          color: Colors.grey[800],
+                      child: GestureDetector(
+                        onTap: () {
+                          try {
+                            if (inWishlist!) {
+                              wishlistCubit.removeFromWishlist(widget.product);
+                            } else {
+                              wishlistCubit.addToWishlist(widget.product);
+                            }
+                          } catch (e) {}
+                          setState(() {
+                            inWishlist = !inWishlist!;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            inWishlist!
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            size: 20,
+                            color: Colors.grey[800],
+                          ),
                         ),
                       ),
                     ),
@@ -87,7 +124,7 @@ class ProductCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      product.title,
+                      widget.product.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -95,10 +132,10 @@ class ProductCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (product.description != null) ...[
+                    if (widget.product.description != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        product.description!,
+                        widget.product.description!,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -110,9 +147,9 @@ class ProductCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        if (product.discountPrice != null) ...[
+                        if (widget.product.discountPrice != null) ...[
                           Text(
-                            '\$${product.discountPrice!.toStringAsFixed(2)}',
+                            '\$${widget.product.discountPrice!.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -120,7 +157,7 @@ class ProductCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '\$${product.price}',
+                            '\$${widget.product.price}',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
@@ -129,7 +166,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         ] else
                           Text(
-                            '\$${product.price}',
+                            '\$${widget.product.price}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -143,7 +180,7 @@ class ProductCard extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           // Add to cart logic
-                          context.read<CartCubit>().addToCart(product);
+                          context.read<CartCubit>().addToCart(widget.product);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,

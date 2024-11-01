@@ -1,5 +1,4 @@
 import 'package:dail_bites/bloc/cart/cubit.dart';
-import 'package:dail_bites/bloc/cart/state.dart';
 import 'package:dail_bites/bloc/products/product_state.dart';
 import 'package:dail_bites/ui/widgets/appbars.dart';
 import 'package:flutter/material.dart';

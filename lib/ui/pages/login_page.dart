@@ -4,7 +4,6 @@ import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:dail_bites/ui/widgets/toasts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lottie/lottie.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class LoginPage extends StatefulWidget {
@@ -77,7 +76,6 @@ class _LoginPageState extends State<LoginPage>
       }
       showError(context,
           title: 'Unknown Error', description: 'An unknown error occured');
-      print(e.response);
     }
     await Future.delayed(const Duration(seconds: 2));
 

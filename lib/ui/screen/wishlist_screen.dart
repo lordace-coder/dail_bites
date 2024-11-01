@@ -1,35 +1,15 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:dail_bites/bloc/cart/cubit.dart';
+import 'package:dail_bites/bloc/category_bloc.dart';
+import 'package:dail_bites/bloc/category_state.dart';
+import 'package:dail_bites/bloc/products/product_state.dart';
+import 'package:dail_bites/bloc/wishlist/state.dart';
 import 'package:dail_bites/ui/pages/home_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-class WishlistItem {
-  final String id;
-  final String name;
-  final String category;
-  final double price;
-  final String? imageUrl;
-  final double? rating;
-  final int? reviewCount;
-  final double? discount;
-  final String availability;
-  final DateTime dateAdded;
-
-  WishlistItem({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.price,
-    this.imageUrl,
-    this.rating,
-    this.reviewCount,
-    this.discount,
-    required this.availability,
-    required this.dateAdded,
-  });
-}
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -40,13 +20,11 @@ class WishlistScreen extends StatefulWidget {
 
 class _WishlistScreenState extends State<WishlistScreen>
     with SingleTickerProviderStateMixin {
-  final List<WishlistItem> _items = [];
   late AnimationController _controller;
-  late ScrollController _scrollController;
-  double _scrollOffset = 0;
+  final double _scrollOffset = 0;
   bool _showDeleteDialog = false;
   String? _itemToDelete;
-
+  Product? _productToDelete;
   @override
   void initState() {
     super.initState();
@@ -54,19 +32,13 @@ class _WishlistScreenState extends State<WishlistScreen>
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    _scrollController = ScrollController()
-      ..addListener(() {
-        setState(() {
-          _scrollOffset = _scrollController.offset;
-        });
-      });
+
     _controller.forward();
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -80,7 +52,9 @@ class _WishlistScreenState extends State<WishlistScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    final wishlistCubit = context.watch<WishlistCubit>();
+    wishlistCubit.fetchWishlist();
+    final items = wishlistCubit.state.products;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -89,7 +63,6 @@ class _WishlistScreenState extends State<WishlistScreen>
           children: [
             // Main Content
             CustomScrollView(
-              controller: _scrollController,
               physics: const BouncingScrollPhysics(),
               slivers: [
                 // Enhanced App Bar
@@ -117,20 +90,20 @@ class _WishlistScreenState extends State<WishlistScreen>
                 ),
 
                 // Empty State
-                if (_items.isEmpty)
+                if (items.isEmpty)
                   SliverFillRemaining(
                     child: _buildEmptyState(theme),
                   ),
 
                 // Wishlist Items
-                if (_items.isNotEmpty) ...[
+                if (items.isNotEmpty) ...[
                   _buildWishlistItems(theme),
                 ],
               ],
             ),
 
             // Delete Confirmation Dialog
-            if (_showDeleteDialog) _buildDeleteDialog(theme),
+            if (_showDeleteDialog) _buildDeleteDialog(theme, _productToDelete),
           ],
         ),
       ),
@@ -259,6 +232,8 @@ class _WishlistScreenState extends State<WishlistScreen>
   }
 
   Widget _buildStatsRow() {
+    final items = context.read<WishlistCubit>().state.products;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -272,7 +247,7 @@ class _WishlistScreenState extends State<WishlistScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStat('Items', _items.length.toString()),
+          _buildStat('Items', items.length.toString()),
           _buildVerticalDivider(),
           _buildStat('Total Value', '₦${_calculateTotalValue()}'),
           _buildVerticalDivider(),
@@ -365,23 +340,25 @@ class _WishlistScreenState extends State<WishlistScreen>
   }
 
   Widget _buildWishlistItems(ThemeData theme) {
+    final items = context.read<WishlistCubit>().state.products;
+
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            final item = _items[index];
+            final item = items[index];
             return _buildEnhancedWishlistItem(item, theme);
           },
-          childCount: _items.length,
+          childCount: items.length,
         ),
       ),
     );
   }
 
-  Widget _buildEnhancedWishlistItem(WishlistItem item, ThemeData theme) {
-    final discountedPrice = item.discount != null
-        ? item.price * (1 - item.discount! / 100)
+  Widget _buildEnhancedWishlistItem(Product item, ThemeData theme) {
+    final discountPriceedPrice = item.discountPrice != null
+        ? item.price * (1 - item.discountPrice! / 100)
         : item.price;
 
     return Padding(
@@ -402,8 +379,9 @@ class _WishlistScreenState extends State<WishlistScreen>
             size: 28,
           ),
         ),
-        onDismissed: (direction) {
+        onDismissed: (direction) async {
           // remove item from wishlist
+          await context.read<WishlistCubit>().removeFromWishlist(item);
         },
         child: Container(
           decoration: BoxDecoration(
@@ -437,7 +415,7 @@ class _WishlistScreenState extends State<WishlistScreen>
                           ),
                           child: item.imageUrl != null
                               ? Image.network(
-                                  item.imageUrl!,
+                                  item.imageUrl.toString(),
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) =>
                                       const Icon(
@@ -455,7 +433,7 @@ class _WishlistScreenState extends State<WishlistScreen>
                       ),
                     ),
                   ),
-                  if (item.discount != null)
+                  if (item.discountPrice != null)
                     Positioned(
                       top: 12,
                       left: 12,
@@ -469,7 +447,7 @@ class _WishlistScreenState extends State<WishlistScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${item.discount}% OFF',
+                          '${item.discountPrice}% OFF',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -495,7 +473,7 @@ class _WishlistScreenState extends State<WishlistScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                item.name,
+                                item.title,
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: const Color(0xFF1E1E1E),
@@ -516,7 +494,13 @@ class _WishlistScreenState extends State<WishlistScreen>
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      item.category,
+                                      //fetch category from cubit using the id
+                                      (context.read<CategoryCubit>().state
+                                              as CategoryLoaded)
+                                          .categories
+                                          .firstWhere((cat) =>
+                                              cat.id == item.categoryId)
+                                          .category,
                                       style: TextStyle(
                                         color: Colors.grey[700],
                                         fontSize: 14,
@@ -524,33 +508,6 @@ class _WishlistScreenState extends State<WishlistScreen>
                                       ),
                                     ),
                                   ),
-                                  if (item.rating != null) ...[
-                                    const SizedBox(width: 8),
-                                    const Icon(
-                                      Icons.star_rounded,
-                                      size: 16,
-                                      color: Colors.amber,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      item.rating!.toString(),
-                                      style: TextStyle(
-                                        color: Colors.grey[700],
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    if (item.reviewCount != null) ...[
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '(${item.reviewCount})',
-                                        style: TextStyle(
-                                          color: Colors.grey[500],
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
                                 ],
                               ),
                             ],
@@ -561,13 +518,13 @@ class _WishlistScreenState extends State<WishlistScreen>
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              '₦${discountedPrice.toStringAsFixed(2)}',
+                              '₦${item.discountPrice?.ceil().toStringAsFixed(2)}',
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFF1E1E1E),
                               ),
                             ),
-                            if (item.discount != null)
+                            if (item.discountPrice != null)
                               Text(
                                 '₦${item.price.toStringAsFixed(2)}',
                                 style: TextStyle(
@@ -590,30 +547,19 @@ class _WishlistScreenState extends State<WishlistScreen>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: item.availability == 'In Stock'
-                                ? Colors.green[50]
-                                : Colors.orange[50],
+                            color: Colors.green[50],
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            item.availability,
+                            '${item.count!.toInt()} in stock',
                             style: TextStyle(
-                              color: item.availability == 'In Stock'
-                                  ? Colors.green[700]
-                                  : Colors.orange[700],
+                              color: Colors.green[700],
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                         const Spacer(),
-                        Text(
-                          'Added ${_formatDate(item.dateAdded)}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -624,23 +570,18 @@ class _WishlistScreenState extends State<WishlistScreen>
                           child: _buildPrimaryButton(
                             onPressed: () {
                               // Add to cart logic
+                              context.read<CartCubit>().addToCart(item);
                             },
                             icon: Icons.shopping_cart_outlined,
                             label: 'Add to Cart',
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        _buildIconButton(
-                          onPressed: () {
-                            // Share logic
-                          },
-                          icon: Icons.share_outlined,
-                          backgroundColor: Colors.blue[50]!,
-                          iconColor: Colors.blue[700]!,
-                        ),
                         const SizedBox(width: 8),
                         _buildIconButton(
-                          onPressed: () => _showDeleteConfirmation(item.id),
+                          onPressed: () {
+                            _productToDelete = item;
+                            _showDeleteConfirmation(item.id);
+                          },
                           icon: Icons.delete_outline_rounded,
                           backgroundColor: Colors.red[50]!,
                           iconColor: Colors.red[700]!,
@@ -798,7 +739,13 @@ class _WishlistScreenState extends State<WishlistScreen>
     );
   }
 
-  Widget _buildDeleteDialog(ThemeData theme) {
+  Widget _buildDeleteDialog(ThemeData theme, Product? product) {
+    if (product == null) {
+      setState(() {
+        _showDeleteDialog = false;
+        _itemToDelete = null;
+      });
+    }
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
       child: Dialog(
@@ -858,8 +805,15 @@ class _WishlistScreenState extends State<WishlistScreen>
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        if (_itemToDelete != null) {
+                        if (_productToDelete != null) {
 // remove item
+                          context
+                              .read<WishlistCubit>()
+                              .removeFromWishlist(product!);
+                          setState(() {
+                            _showDeleteDialog = false;
+                            _itemToDelete = null;
+                          });
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -898,11 +852,13 @@ class _WishlistScreenState extends State<WishlistScreen>
   }
 
   String _calculateTotalValue() {
-    final total = _items.fold<double>(
+    final items = context.read<WishlistCubit>().state.products;
+
+    final total = items.fold<double>(
       0,
       (sum, item) {
-        final price = item.discount != null
-            ? item.price * (1 - item.discount! / 100)
+        final price = item.discountPrice != null
+            ? item.price * (1 - item.discountPrice! / 100)
             : item.price;
         return sum + price;
       },
@@ -911,11 +867,13 @@ class _WishlistScreenState extends State<WishlistScreen>
   }
 
   String _calculateTotalSavings() {
-    final savings = _items.fold<double>(
+    final items = context.read<WishlistCubit>().state.products;
+
+    final savings = items.fold<double>(
       0,
       (sum, item) {
-        if (item.discount != null) {
-          return sum + (item.price * item.discount! / 100);
+        if (item.discountPrice != null) {
+          return sum + (item.price * item.discountPrice! / 100);
         }
         return sum;
       },

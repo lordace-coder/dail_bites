@@ -6,6 +6,7 @@ import 'package:dail_bites/bloc/category_bloc.dart';
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_state.dart';
 import 'package:dail_bites/bloc/products/product_cubit.dart';
+import 'package:dail_bites/bloc/wishlist/state.dart';
 import 'package:dail_bites/ui/pages/home_page.dart';
 import 'package:dail_bites/ui/pages/login_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
@@ -25,9 +26,10 @@ void main() async {
     save: (String data) async => pref.setString('pb_auth', data),
     initial: pref.getString('pb_auth'),
   );
-  final pb = PocketbaseServiceCubit(
-      prefs: pref, pb: PocketBase(baseUrl, authStore: store));
-
+  final pocketBase = PocketBase(baseUrl, authStore: store);
+  final pb = PocketbaseServiceCubit(prefs: pref, pb: pocketBase);
+  final wishlistCubit = WishlistCubit(pb: pocketBase);
+  await wishlistCubit.fetchWishlist();
   runApp(
     MultiBlocProvider(
       providers: [
@@ -45,7 +47,10 @@ void main() async {
           create: (context) => CategoryCubit(pocketBase: pb.pb),
         ),
         BlocProvider<CartCubit>(
-          create: (context) => CartCubit(),
+          create: (context) => CartCubit(pb: pocketBase),
+        ),
+        BlocProvider<WishlistCubit>(
+          create: (context) => wishlistCubit,
         ),
         BlocProvider<AdsCubit>(
           create: (context) {
@@ -71,9 +76,6 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -118,12 +120,5 @@ class _MainAppState extends State<MainApp> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
   }
 }

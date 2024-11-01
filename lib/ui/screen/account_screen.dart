@@ -2,7 +2,6 @@ import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
 import 'package:dail_bites/provider/customer_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pocketbase/pocketbase.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -118,13 +117,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildProfileHeader() {
-    print(context
-        .read<PocketbaseServiceCubit>()
-        .state
-        .pb
-        .authStore
-        .model
-        .runtimeType);
+ 
     final user =
         context.read<PocketbaseServiceCubit>().state.pb.authStore.model.data;
 
@@ -142,44 +135,6 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
       child: Column(
         children: [
-          Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 3,
-                  ),
-                  image: user['avatar'].toString().isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(
-                            user['avatar']
-                                .toString(), // Replace with actual user image
-                          ),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.edit,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
           Text(
             '${user['username']}',

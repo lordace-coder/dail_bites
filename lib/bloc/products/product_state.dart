@@ -131,8 +131,9 @@ class ProductLoading extends ProductState {}
 
 class ProductLoaded extends ProductState {
   final List<Product> products;
+  List<Product> productsForCategory;
 
-  const ProductLoaded(this.products);
+  ProductLoaded(this.products, {this.productsForCategory = const []});
 
   @override
   bool operator ==(Object other) =>
