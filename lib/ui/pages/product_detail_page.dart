@@ -1,5 +1,8 @@
 import 'package:dail_bites/bloc/cart/cubit.dart';
 import 'package:dail_bites/bloc/products/product_state.dart';
+import 'package:dail_bites/bloc/wishlist/cubit.dart';
+import 'package:dail_bites/bloc/wishlist/state.dart';
+import 'package:dail_bites/ui/theme.dart';
 import 'package:dail_bites/ui/widgets/appbars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,7 +20,16 @@ class _ProductDisplayState extends State<ProductDisplay>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool isFavorite = false;
+
+  bool get isFavorite {
+    final wishlistCubit = context.read<WishlistCubit>();
+    if (wishlistCubit.state is WishlistLoaded) {
+      // check if item is in wishlist
+      return wishlistCubit.isInWishlist(widget.product);
+    }
+    return false;
+  }
+
   int count = 1;
 
   @override
@@ -30,6 +42,17 @@ class _ProductDisplayState extends State<ProductDisplay>
     _scaleAnimation = Tween<double>(begin: 1, end: 0.95).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // check if wishlist has been loaded ,and load it if it hasnt
+    });
+  }
+
+  void toggleFavourite() {
+    if (isFavorite) {
+      context.read<WishlistCubit>().removeFromWishlist(widget.product);
+      return;
+    }
+    context.read<WishlistCubit>().addToWishlist(widget.product);
   }
 
   @override
@@ -52,11 +75,9 @@ class _ProductDisplayState extends State<ProductDisplay>
   }
 
   void _incrementCount() {
-    if (widget.product.count != null && count < widget.product.count!) {
-      setState(() {
-        count++;
-      });
-    }
+    setState(() {
+      count++;
+    });
   }
 
   void _decrementCount() {
@@ -156,9 +177,7 @@ class _ProductDisplayState extends State<ProductDisplay>
                                     size: 22,
                                   ),
                                   onPressed: () {
-                                    setState(() {
-                                      isFavorite = !isFavorite;
-                                    });
+                                    toggleFavourite();
                                   },
                                   constraints: const BoxConstraints(
                                     minWidth: 36,
@@ -273,7 +292,9 @@ class _ProductDisplayState extends State<ProductDisplay>
                               ),
                               _buildCounterButton(
                                 icon: Icons.add,
-                                onPressed: _incrementCount,
+                                onPressed: () {
+                                  _incrementCount();
+                                },
                               ),
                             ],
                           ),
@@ -304,11 +325,11 @@ class _ProductDisplayState extends State<ProductDisplay>
                 child: Container(
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
+                    color: AppTheme().secondary,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).primaryColor.withOpacity(0.25),
+                        color: AppTheme().secondary.withOpacity(0.25),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),

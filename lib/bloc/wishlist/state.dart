@@ -29,7 +29,6 @@ class WishlistCubit extends Cubit<WishlistState> {
           .map((record) {
             final productData = record.expand['product']?[0];
             if (productData == null) return null;
-
             return Product.fromJson({
               'id': productData.id,
               'title': productData.data['title'],
@@ -38,7 +37,8 @@ class WishlistCubit extends Cubit<WishlistState> {
               'price': productData.data['price'],
               'discount_price': productData.data['discount_price'],
               'count': productData.data['count'],
-              'image': Uri.parse(productData.data['image']),
+              'image': pb.getFileUrl(
+                  productData, productData.data['image'].toString()),
             });
           })
           .whereType<Product>() // Remove null values

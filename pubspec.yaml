@@ -21,6 +21,7 @@ dependencies:
   toastification: ^2.3.0
   flutter_paystack_plus: 2.1.0
   intl:
+  google_fonts: ^6.2.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

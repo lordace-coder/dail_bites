@@ -211,7 +211,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (state is AdsLoaded && state.ads.isNotEmpty) {
                     // increment ad view
                     startAutoSlide(pageController, getAdsLength);
-
                     return SliverToBoxAdapter(
                       child: SizedBox(
                         height: 200,
@@ -222,6 +221,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             final adData = context
                                 .read<AdsCubit>()
                                 .getAdData(state.ads[index]);
+                            print(adData!['image']);
+
                             return Container(
                               margin: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
@@ -232,64 +233,53 @@ class _HomeScreenState extends State<HomeScreen> {
                                           0.5), // Adjust opacity between 0.0 and 1.0
                                       BlendMode.darken,
                                     ),
-                                    image:
-                                        Image.network(adData!['image']).image,
+                                    image: Image.network(
+                                      adData['image'],
+                                    ).image,
                                     fit: BoxFit.cover),
                               ),
-                              child: Stack(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Positioned(
-                                    left: 20,
-                                    top: 40,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          adData['title'],
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        SizedBox(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.86,
-                                          child: Text(
-                                            adData['description'],
-                                            style: TextStyle(
-                                              color:
-                                                  Colors.white.withOpacity(0.9),
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        ElevatedButton(
-                                          onPressed: () async {
-                                            await launchLink(
-                                                adData['location']);
-                                            context
-                                                .read<AdsCubit>()
-                                                .incrementClicks(adData['id']);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            foregroundColor: Colors.blue[900],
-                                          ),
-                                          child: Text(adData['call_to_action']
-                                                  .toString()
-                                                  .isEmpty
-                                              ? 'Discover More'
-                                              : adData['call_to_action']
-                                                  .toString()),
-                                        ),
-                                      ],
+                                  Text(
+                                    adData['title'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
                                     ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.86,
+                                    child: Text(
+                                      adData['description'],
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 3,
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      await launchLink(adData['location']);
+                                      context
+                                          .read<AdsCubit>()
+                                          .incrementClicks(adData['id']);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.blue[900],
+                                    ),
+                                    child: Text(adData['call_to_action']
+                                            .toString()
+                                            .isEmpty
+                                        ? 'Discover More'
+                                        : adData['call_to_action'].toString()),
                                   ),
                                 ],
                               ),

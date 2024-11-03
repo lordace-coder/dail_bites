@@ -275,7 +275,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   Icons.info,
                   'Terms and Policies',
                   'View terms of service and privacy policies of our app',
-                  iconColor: Colors.teal,
+                  iconColor: Colors.indigo,
                   onTap: () {
                     launchLink('${AppDataProvider().baseUrl}/terms.html');
                   },
@@ -294,7 +294,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   Icons.info,
                   'Licenses',
                   'View app licences',
-                  iconColor: Colors.teal,
+                  iconColor: Colors.deepOrangeAccent,
                   onTap: () {
                     showLicensePage(context: context);
                   },
@@ -303,7 +303,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   Icons.help_outline,
                   'Help & Support',
                   'Get help with your orders and products',
-                  iconColor: Colors.teal,
+                  iconColor: Colors.purpleAccent,
                   onTap: () {
                     openWhatsAppSupport();
                   },

@@ -93,10 +93,11 @@ class _GenericAppBarState extends State<GenericAppBar>
               Opacity(
                 opacity: 1 - _animation.value,
                 child: const Text(
-                  'My Store',
+                  'ScreenSteaks',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
+                  
                     fontWeight: FontWeight.bold,
                   ),
                 ),

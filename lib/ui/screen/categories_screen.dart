@@ -5,6 +5,7 @@ import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CategoriesScreen extends StatelessWidget {
   CategoriesScreen({super.key});
@@ -50,22 +51,18 @@ class CategoriesScreen extends StatelessWidget {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverAppBar(
-              expandedHeight: 80,
-              floating: true,
-              pinned: true,
-              elevation: 0,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
+            SliverToBoxAdapter(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                child: Text(
                   'Export Different Categories',
-                  style: TextStyle(
+                  style: GoogleFonts.itim(
                     color: Colors.grey[800],
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
                 ),
-                centerTitle: true,
               ),
             ),
 

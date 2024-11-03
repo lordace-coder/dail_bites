@@ -13,6 +13,7 @@ import 'package:dail_bites/ui/pages/login_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart' as toast;
@@ -108,8 +109,14 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return toast.ToastificationWrapper(
       child: MaterialApp(
+        theme: ThemeData(
+          textTheme: GoogleFonts.itimTextTheme(textTheme).copyWith(
+            bodyMedium: GoogleFonts.oswald(textStyle: textTheme.bodyMedium),
+          ),
+        ),
         navigatorKey: AppRouter().navigatorKey,
         debugShowCheckedModeBanner: false,
         home: BlocBuilder<PocketbaseServiceCubit, BackendService>(

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dail_bites/bloc/cart/cubit.dart';
 import 'package:dail_bites/bloc/category_bloc.dart';
 import 'package:dail_bites/bloc/category_state.dart';
@@ -51,7 +52,6 @@ class _WishlistScreenState extends State<WishlistScreen>
   }
 
   List get items {
-    print('called');
     try {
       final wishlistCubit = context.read<WishlistCubit>();
       wishlistCubit.fetchWishlist();
@@ -141,9 +141,10 @@ class _WishlistScreenState extends State<WishlistScreen>
           const SizedBox(height: 12),
           Text(
             'Start adding items you love to your wishlist',
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.grey[600],
-              fontSize: 16,
+              fontSize: 14,
             ),
           ),
           const SizedBox(height: 32),
@@ -207,7 +208,6 @@ class _WishlistScreenState extends State<WishlistScreen>
           children: [
             const SizedBox(height: 100),
             // Enhanced Stats Row
-            _buildStatsRow(),
             const SizedBox(height: 24),
             // Enhanced Title Section
             _buildTitleSection(),
@@ -240,32 +240,6 @@ class _WishlistScreenState extends State<WishlistScreen>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatsRow() {
-    final items = context.read<WishlistCubit>().state.products;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStat('Items', items.length.toString()),
-          _buildVerticalDivider(),
-          _buildStat('Total Value', '₦${_calculateTotalValue()}'),
-          _buildVerticalDivider(),
-          _buildStat('Savings', '₦${_calculateTotalSavings()}'),
-        ],
-      ),
     );
   }
 
@@ -368,6 +342,7 @@ class _WishlistScreenState extends State<WishlistScreen>
     );
   }
 
+// String getImageUrl(){}
   Widget _buildEnhancedWishlistItem(Product item, ThemeData theme) {
     final discountPriceedPrice = item.discountPrice != null
         ? item.price * (1 - item.discountPrice! / 100)
@@ -425,49 +400,20 @@ class _WishlistScreenState extends State<WishlistScreen>
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                           ),
-                          child: item.imageUrl != null
-                              ? Image.network(
-                                  item.imageUrl.toString(),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                    Icons.image_not_supported_outlined,
-                                    size: 40,
-                                    color: Colors.grey,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.image_outlined,
-                                  size: 40,
-                                  color: Colors.grey,
-                                ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (item.discountPrice != null)
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red[400],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${item.discountPrice}% OFF',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                          child: CachedNetworkImage(
+                            imageUrl: item.imageUrl.toString(),
+                            fit: BoxFit.cover,
+                            errorWidget: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.image_not_supported_outlined,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
               // Enhanced Content Section
@@ -551,29 +497,7 @@ class _WishlistScreenState extends State<WishlistScreen>
                     ),
                     const SizedBox(height: 16),
                     // Availability and Date Added
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green[50],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${item.count!.toInt()} in stock',
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
+
                     const SizedBox(height: 20),
                     // Enhanced Action Buttons
                     Row(
