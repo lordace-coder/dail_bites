@@ -5,6 +5,7 @@ import 'package:dail_bites/ui/screen/account_screen.dart';
 import 'package:dail_bites/ui/screen/categories_screen.dart';
 import 'package:dail_bites/ui/screen/home_screen.dart';
 import 'package:dail_bites/ui/screen/wishlist_screen.dart';
+import 'package:dail_bites/ui/theme.dart';
 import 'package:dail_bites/ui/widgets/appbars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,12 +30,13 @@ class _HomePageState extends State<HomePage> {
       const WishlistScreen(),
       const AccountScreen()
     ];
+    final primary = AppTheme().primary;
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: _selectedIndex == 0 ? const GenericAppBar() : null,
       body: pages[_selectedIndex],
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: primary,
         onPressed: () {
           AppRouter().navigateTo(const CartPage());
         },
@@ -85,7 +87,7 @@ class _HomePageState extends State<HomePage> {
         },
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue[900],
+        selectedItemColor: primary,
         unselectedItemColor: Colors.grey[600],
         items: const [
           BottomNavigationBarItem(
@@ -97,11 +99,11 @@ class _HomePageState extends State<HomePage> {
             label: 'Categories',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
+            icon: Icon(Icons.favorite),
             label: 'Wishlist',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.person),
             label: 'Account',
           ),
         ],

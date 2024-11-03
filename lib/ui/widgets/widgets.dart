@@ -5,6 +5,7 @@ import 'package:dail_bites/bloc/products/product_state.dart';
 import 'package:dail_bites/bloc/wishlist/state.dart';
 import 'package:dail_bites/ui/pages/product_detail_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
+import 'package:dail_bites/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -22,7 +23,7 @@ class ProductCard extends StatefulWidget {
 }
 
 class _ProductCardState extends State<ProductCard> {
-  bool? inWishlist ;
+  bool? inWishlist;
   void checkWishlist() {
     if (inWishlist != null) return;
     setState(() {
@@ -149,7 +150,7 @@ class _ProductCardState extends State<ProductCard> {
                       children: [
                         if (widget.product.discountPrice != null) ...[
                           Text(
-                            '\$${widget.product.discountPrice!.toStringAsFixed(2)}',
+                            '₦${widget.product.discountPrice!.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -157,7 +158,7 @@ class _ProductCardState extends State<ProductCard> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '\$${widget.product.price}',
+                            '₦${widget.product.price}',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
@@ -166,7 +167,7 @@ class _ProductCardState extends State<ProductCard> {
                           ),
                         ] else
                           Text(
-                            '\$${widget.product.price}',
+                            '₦${widget.product.price}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -183,7 +184,7 @@ class _ProductCardState extends State<ProductCard> {
                           context.read<CartCubit>().addToCart(widget.product);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
+                          backgroundColor: AppTheme().secondary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(

@@ -22,7 +22,7 @@ class AdsCubit extends Cubit<AdsState> {
       // for (var element in records.items) {
       //   incrementViews(element.data['id']);
       // }
-
+      print(records.items);
       emit(AdsLoaded(records.items));
 
       for (var i = 0; i < records.items.length; i++) {
@@ -43,6 +43,7 @@ class AdsCubit extends Cubit<AdsState> {
         'location': record.getStringValue('location'),
         'clicks': record.getDoubleValue('clicks'),
         'views': record.getDoubleValue('views'),
+        'call_to_action': record.getStringValue('call_to_action'),
         'image': pb.files.getUrl(record, record.data['image']).toString(),
       };
     } catch (e) {

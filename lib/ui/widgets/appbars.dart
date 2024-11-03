@@ -3,6 +3,7 @@ import 'package:dail_bites/bloc/products/product_cubit.dart';
 import 'package:dail_bites/ui/pages/cart_page.dart';
 import 'package:dail_bites/ui/pages/home_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
+import 'package:dail_bites/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -76,7 +77,7 @@ class _GenericAppBarState extends State<GenericAppBar>
     return AppBar(
       foregroundColor: Colors.white,
       elevation: 0,
-      backgroundColor: Colors.blue[900],
+      backgroundColor: AppTheme().primary,
       leading: _isSearching
           ? IconButton(
               icon: const Icon(Icons.arrow_back),

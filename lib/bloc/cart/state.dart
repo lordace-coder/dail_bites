@@ -3,6 +3,10 @@
 // Cart Item Model
 import 'dart:convert';
 
+import 'package:dail_bites/ui/pages/completed_transaction_page.dart';
+import 'package:dail_bites/ui/routes/routes.dart';
+import 'package:flutter/widgets.dart';
+
 class CartItem {
   final String id;
   final String name;
@@ -111,7 +115,16 @@ class CartLoaded extends CartState {
   });
 }
 
-class CartOrderSuccess extends CartState {}
+class CartOrderSuccess extends CartState {
+  final String orderId;
+  CartOrderSuccess({
+    required this.orderId,
+  }) {
+    AppRouter().navigateTo(OrderReceipt(
+      orderId: orderId,
+    ));
+  }
+}
 
 class CartError extends CartState {
   final String message;

@@ -1,15 +1,17 @@
+import 'package:dail_bites/bloc/cart/cubit.dart';
+import 'package:dail_bites/provider/app_provider.dart';
 import 'package:dail_bites/ui/pages/completed_transaction_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_paystack_plus/flutter_paystack_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class PaystackPaymentService {
-  final String publicKey = 'pk_test_14e8e01f8cbb1d3eb5dac7c17572364a42509fec';
   final PocketBase pb;
   final Dio dio = Dio();
-
+  final appData = AppDataProvider();
   PaystackPaymentService(this.pb);
 
   Future<void> makePayment({
@@ -17,7 +19,7 @@ class PaystackPaymentService {
     required double amount,
     required BuildContext context,
     required String orderId,
-    required Function() onSuccess,
+    required VoidCallback onSuccess,
   }) async {
     try {
       // Convert amount to kobo (multiply by 100)
@@ -29,8 +31,8 @@ class PaystackPaymentService {
       // Initialize payment
       await FlutterPaystackPlus.openPaystackPopup(
         context: context,
-        publicKey: publicKey,
-        secretKey: 'sk_test_e40eecaa87be78830c7e8fa3f9b8b4ef900afe33',
+        publicKey: appData.publicKey,
+        secretKey: appData.secretKey,
         amount: amountInKobo.toString(),
         customerEmail: email,
         reference: reference,
@@ -59,19 +61,19 @@ class PaystackPaymentService {
             'user': pb.authStore.model.id,
           }
         },
-        onClosed: () {},
-        onSuccess: () async {
-          AppRouter().navigateTo(CompletedTransactionPage(
-            orderId: orderId,
-          ));
+        onClosed: () {
+          print('cloesed');
+          onSuccess.call();
+        },
+        onSuccess: () {
+          print('success');
+          Navigator.of(context).pop();
+          AppRouter().navigateTo(OrderReceipt(orderId: orderId));
+          onSuccess.call();
         },
       );
     } catch (e) {
       throw Exception('Payment error: $e');
     }
   }
-
-//TODO change this to webhook
-
-// 2 set order to paid
 }

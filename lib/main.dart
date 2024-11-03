@@ -7,6 +7,7 @@ import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_state.dart';
 import 'package:dail_bites/bloc/products/product_cubit.dart';
 import 'package:dail_bites/bloc/wishlist/state.dart';
+import 'package:dail_bites/provider/app_provider.dart';
 import 'package:dail_bites/ui/pages/home_page.dart';
 import 'package:dail_bites/ui/pages/login_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
@@ -17,19 +18,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart' as toast;
 
 void main() async {
-  // const String baseUrl = 'https://dailbit.pockethost.io'; //'http://10.0.2.2:8000';
-  const String baseUrl = 'http://10.0.2.2:8090';
-
+  final AppDataProvider appData = AppDataProvider();
   WidgetsFlutterBinding.ensureInitialized();
   final pref = await SharedPreferences.getInstance();
   final store = AsyncAuthStore(
     save: (String data) async => pref.setString('pb_auth', data),
     initial: pref.getString('pb_auth'),
   );
-  final pocketBase = PocketBase(baseUrl, authStore: store);
+  final pocketBase = PocketBase(appData.baseUrl, authStore: store);
   final pb = PocketbaseServiceCubit(prefs: pref, pb: pocketBase);
   final wishlistCubit = WishlistCubit(pb: pocketBase);
-  await wishlistCubit.fetchWishlist();
+  try {
+    await wishlistCubit.fetchWishlist();
+  } catch (e) {}
+
   runApp(
     MultiBlocProvider(
       providers: [

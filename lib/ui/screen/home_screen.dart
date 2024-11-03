@@ -60,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final adCubit = context.read<AdsCubit>();
       if (adCubit.state is! AdsLoaded) {
         adCubit.fetchRandomAds();
-        print('fetching ads from home page ----');
       }
       // if widget.query then perform search
       if (widget.query != null) {
@@ -76,7 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      if (state.state is CategoryLoaded && productCubit.state is ProductLoaded) {
+      if (state.state is CategoryLoaded &&
+          productCubit.state is ProductLoaded) {
         return;
       }
       setState(() {
@@ -92,9 +92,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  int get getAdsLength {
+    try {
+      return (context.read<AdsCubit>().state as AdsLoaded).ads.length;
+    } catch (e) {}
+    return 0;
+  }
+
   void startAutoSlide(PageController pageController, int itemCount) {
     // Cancel any existing timer to avoid duplicates
-
+    print(itemCount);
     void createTimer() {
       timer?.cancel();
 
@@ -203,6 +210,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, state) {
                   if (state is AdsLoaded && state.ads.isNotEmpty) {
                     // increment ad view
+                    startAutoSlide(pageController, getAdsLength);
+
                     return SliverToBoxAdapter(
                       child: SizedBox(
                         height: 200,
@@ -213,10 +222,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             final adData = context
                                 .read<AdsCubit>()
                                 .getAdData(state.ads[index]);
-
                             return Container(
                               margin: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
                                 image: DecorationImage(
                                     colorFilter: ColorFilter.mode(
                                       Colors.black.withOpacity(
@@ -272,7 +281,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                             backgroundColor: Colors.white,
                                             foregroundColor: Colors.blue[900],
                                           ),
-                                          child: const Text('Shop Now'),
+                                          child: Text(adData['call_to_action']
+                                                  .toString()
+                                                  .isEmpty
+                                              ? 'Discover More'
+                                              : adData['call_to_action']
+                                                  .toString()),
                                         ),
                                       ],
                                     ),

@@ -39,7 +39,7 @@ class _ProductDisplayState extends State<ProductDisplay>
   }
 
   String _formatPrice(double price) {
-    return '\$${price.toStringAsFixed(2)}';
+    return '₦${price.toStringAsFixed(2)}';
   }
 
   double _calculateDiscount() {

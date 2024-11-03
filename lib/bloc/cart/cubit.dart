@@ -104,21 +104,31 @@ class CartCubit extends Cubit<CartState> {
       }
 
       // Prepare product IDs from cart items
-      final productIds = items.map((item) => item.id).toList();
+      final orderitems = <String>[];
+      for (var element in items) {
+        Map<String, dynamic> data = {
+          'product': element.id,
+          'count': 0,
+        };
+        for (var i = 0; i < element.quantity; i++) {
+          data['count'] = data['count'] + 1;
+        }
+        final newOrder = await pb.collection('orderitem').create(body: data);
+        orderitems.add(newOrder.id);
+      }
 
       // Create the order in PocketBase
       final body = {
         "owner": currentUser,
-        "products": productIds,
+        "orderitem": orderitems,
         "location": location,
         "contact": contact,
         'paid': false,
       };
 
       final createdData = await pb.collection('order').create(body: body);
-
       // Clear the cart after successful order
-
+      clearCart();
       // Show success message
       showSucces(
         title: 'Order Placed',
@@ -129,11 +139,14 @@ class CartCubit extends Cubit<CartState> {
           email: (pb.authStore.model as RecordModel).getStringValue('email'),
           amount: amount,
           context: context,
-          onSuccess: () {
-            clearCart();
-          },
+          onSuccess: () {   emit(
+        CartOrderSuccess(
+          orderId: createdData.id,
+        ),
+      );},
           orderId: createdData.id);
-      emit(CartOrderSuccess()); // Add this state to your CartState
+
+   
     } catch (e) {
       emit(
           CartError(message: e.toString())); // Add this state to your CartState

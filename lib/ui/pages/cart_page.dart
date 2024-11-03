@@ -1,12 +1,9 @@
 import 'package:dail_bites/bloc/cart/cubit.dart';
 import 'package:dail_bites/bloc/cart/state.dart';
-import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
-import 'package:dail_bites/provider/paystack_payment.dart';
 import 'package:dail_bites/ui/pages/home_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pocketbase/pocketbase.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -42,8 +39,11 @@ class _CartPageState extends State<CartPage> {
     });
   }
 
+  void clearCart() => context.read<CartCubit>().clearCart();
+
   @override
   Widget build(BuildContext context) {
+    print('page rebuilt');
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -53,6 +53,10 @@ class _CartPageState extends State<CartPage> {
         ),
         backgroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+              onPressed: clearCart, icon: const Icon(Icons.delete_forever))
+        ],
       ),
       body: getCartItems().isEmpty ? _buildEmptyCart() : _buildCartContent(),
       bottomNavigationBar: getCartItems().isEmpty ? null : _buildBottomBar(),
@@ -101,7 +105,7 @@ class _CartPageState extends State<CartPage> {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              '${getCartItems().length} items in your cart',
+              '${(context.watch<CartCubit>().state as CartLoaded).items.length} items in your cart',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,

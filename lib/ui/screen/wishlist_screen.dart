@@ -7,6 +7,7 @@ import 'package:dail_bites/bloc/products/product_state.dart';
 import 'package:dail_bites/bloc/wishlist/state.dart';
 import 'package:dail_bites/ui/pages/home_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
+import 'package:dail_bites/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,12 +50,21 @@ class _WishlistScreenState extends State<WishlistScreen>
     });
   }
 
+  List get items {
+    print('called');
+    try {
+      final wishlistCubit = context.read<WishlistCubit>();
+      wishlistCubit.fetchWishlist();
+      final items = wishlistCubit.state.products;
+      return items;
+    } catch (e) {}
+    return [];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final wishlistCubit = context.watch<WishlistCubit>();
-    wishlistCubit.fetchWishlist();
-    final items = wishlistCubit.state.products;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -118,7 +128,7 @@ class _WishlistScreenState extends State<WishlistScreen>
           Icon(
             Icons.favorite_outline_rounded,
             size: 80,
-            color: theme.primaryColor.withOpacity(0.5),
+            color: AppTheme().secondary.withOpacity(0.5),
           ),
           const SizedBox(height: 24),
           Text(
@@ -145,6 +155,8 @@ class _WishlistScreenState extends State<WishlistScreen>
             icon: const Icon(Icons.shopping_bag_outlined),
             label: const Text('Start Shopping'),
             style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: AppTheme().secondary,
               padding: const EdgeInsets.symmetric(
                 horizontal: 24,
                 vertical: 12,

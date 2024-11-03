@@ -12,14 +12,18 @@ class WishlistCubit extends Cubit<WishlistState> {
 
   // Fetch user's wishlist
   Future<void> fetchWishlist() async {
-    final userId = (pb.authStore.model as RecordModel).id;
     try {
+      final userId = (pb.authStore.model as RecordModel).id;
+
       emit(WishlistLoading(products: state.products));
 
       final records = await pb.collection('wishlist').getFullList(
             filter: 'user = "$userId"',
             expand: 'product',
           );
+      if (records.isEmpty) {
+        return;
+      }
 
       final products = records
           .map((record) {
@@ -48,6 +52,7 @@ class WishlistCubit extends Cubit<WishlistState> {
         error: 'Failed to fetch wishlist}',
         products: state.products,
       ));
+      rethrow;
     }
   }
 

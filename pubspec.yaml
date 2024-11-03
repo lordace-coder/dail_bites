@@ -19,8 +19,8 @@ dependencies:
   lottie: ^3.1.3
   url_launcher: ^6.3.1
   toastification: ^2.3.0
-  flutter_paystack_plus: 
-
+  flutter_paystack_plus: 2.1.0
+  intl:
 dev_dependencies:
   flutter_test:
     sdk: flutter

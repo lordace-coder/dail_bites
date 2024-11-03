@@ -1,7 +1,18 @@
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
+import 'package:dail_bites/provider/app_provider.dart';
 import 'package:dail_bites/provider/customer_support.dart';
+import 'package:dail_bites/ui/pages/order_list_page.dart';
+import 'package:dail_bites/ui/routes/routes.dart';
+import 'package:dail_bites/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pocketbase/pocketbase.dart';
+
+class Orders {
+  int count = 0;
+  int completed = 0;
+  int uncompleted = 0;
+}
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -13,9 +24,49 @@ class AccountScreen extends StatefulWidget {
 class _AccountScreenState extends State<AccountScreen> {
   bool isDarkMode = false;
   double profileCompletion = 0.85; // Profile completion percentage
+  final Orders order = Orders();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchOrders();
+    });
+  }
 
   void _logout() {
     context.read<PocketbaseServiceCubit>().state.clearAuthStore();
+  }
+
+  Future<void> fetchOrders() async {
+    final pb = context.read<PocketbaseServiceCubit>().pb;
+    try {
+      final String userId = pb.authStore.model.id;
+      String filter = 'owner = "$userId"';
+
+      filter += ' && paid = true';
+      // } else if (filterStatus == 'unpaid') {
+      //   filter += ' && paid = false';
+      // }
+
+      final result = await pb.collection('order').getList(
+            filter: filter,
+            sort: '-created',
+            expand: 'orderitem,orderitem.product,payments(order)',
+          );
+
+      setState(() {
+        order.count = result.totalItems;
+        order.completed = result.items.map((item) {
+          // get orders that are completed
+          if (item.getBoolValue('paid')) {
+            return item;
+          }
+        }).length;
+        order.uncompleted = order.count - order.completed;
+      });
+    } catch (e) {
+      print(e);
+    }
   }
 
   Widget _buildProfileAction(
@@ -117,7 +168,6 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildProfileHeader() {
- 
     final user =
         context.read<PocketbaseServiceCubit>().state.pb.authStore.model.data;
 
@@ -164,19 +214,19 @@ class _AccountScreenState extends State<AccountScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatColumn('12', 'Orders'),
+              _buildStatColumn(order.count.toString(), 'Orders'),
               Container(
                 width: 1,
                 height: 40,
                 color: Colors.white.withOpacity(0.2),
               ),
-              _buildStatColumn('5', 'Pending'),
+              _buildStatColumn(order.uncompleted.toString(), 'Pending'),
               Container(
                 width: 1,
                 height: 40,
                 color: Colors.white.withOpacity(0.2),
               ),
-              _buildStatColumn('2', 'Returns'),
+              _buildStatColumn(order.completed.toString(), 'Completed'),
             ],
           ),
         ],
@@ -186,6 +236,8 @@ class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.read<PocketbaseServiceCubit>().pb.authStore.model;
+    final bool isStaff = (user as RecordModel).getBoolValue('staff');
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -216,20 +268,37 @@ class _AccountScreenState extends State<AccountScreen> {
                   iconColor: Colors.blue,
                   onTap: () {
                     // Navigate to orders screen
+                    AppRouter().navigateTo(const OrderListPage());
                   },
                 ),
-                // _buildProfileAction(
-                //   Icons.notifications_outlined,
-                //   'Notifications',
-                //   'Manage your notification preferences',
-                //   iconColor: Colors.orange,
-                //   trailing: Switch(
-                //     value: true,
-                //     onChanged: (value) {
-                //       // Handle notification toggle
-                //     },
-                //   ),
-                // ),
+                _buildProfileAction(
+                  Icons.info,
+                  'Terms and Policies',
+                  'View terms of service and privacy policies of our app',
+                  iconColor: Colors.teal,
+                  onTap: () {
+                    launchLink('${AppDataProvider().baseUrl}/terms.html');
+                  },
+                ),
+                if (isStaff)
+                  _buildProfileAction(
+                    Icons.dashboard,
+                    'View Orders',
+                    'Checkout customers order\'s',
+                    iconColor: Colors.amber,
+                    onTap: () {
+                      launchLink("${AppDataProvider().baseUrl}/_/");
+                    },
+                  ),
+                _buildProfileAction(
+                  Icons.info,
+                  'Licenses',
+                  'View app licences',
+                  iconColor: Colors.teal,
+                  onTap: () {
+                    showLicensePage(context: context);
+                  },
+                ),
                 _buildProfileAction(
                   Icons.help_outline,
                   'Help & Support',
@@ -243,7 +312,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 ElevatedButton(
                   onPressed: _logout,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppTheme().secondary,
                     padding: const EdgeInsets.all(16),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(

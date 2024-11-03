@@ -1,6 +1,7 @@
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
 import 'package:dail_bites/ui/pages/signup_page.dart';
 import 'package:dail_bites/ui/routes/routes.dart';
+import 'package:dail_bites/ui/theme.dart';
 import 'package:dail_bites/ui/widgets/toasts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -116,7 +117,7 @@ class _LoginPageState extends State<LoginPage>
                                     height: 100,
                                     width: 100,
                                     decoration: BoxDecoration(
-                                      color: Colors.blue[900],
+                                      color:AppTheme().primary,
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
@@ -196,7 +197,7 @@ class _LoginPageState extends State<LoginPage>
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue[900]!,
+                                                  color:AppTheme().primary,
                                                   width: 2,
                                                 ),
                                               ),
@@ -246,7 +247,7 @@ class _LoginPageState extends State<LoginPage>
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue[900]!,
+                                                  color:AppTheme().primary,
                                                   width: 2,
                                                 ),
                                               ),
@@ -269,7 +270,7 @@ class _LoginPageState extends State<LoginPage>
                                               }
                                             },
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.blue[900],
+                                              backgroundColor:AppTheme().primary,
                                               padding:
                                                   const EdgeInsets.symmetric(
                                                 vertical: 16,
@@ -322,7 +323,7 @@ class _LoginPageState extends State<LoginPage>
                                         child: Text(
                                           'Sign Up',
                                           style: TextStyle(
-                                            color: Colors.blue[900],
+                                            color:AppTheme().primary,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),

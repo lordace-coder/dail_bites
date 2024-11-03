@@ -11,6 +11,7 @@ class ProductCubit extends Cubit<ProductState> {
     try {
       emit(ProductLoading());
       final records = await pocketBase.collection('products').getFullList();
+
       final products = records
           .map((record) => Product.fromJson({
                 'id': record.id,
@@ -18,7 +19,9 @@ class ProductCubit extends Cubit<ProductState> {
                 'description': record.data['description'],
                 'category': record.data['category'],
                 'price': record.data['price'],
-                'discount_price': record.data['discount_price'],
+                'discount_price': record.data['discount_price'] == 0
+                    ? record.data['price']
+                    : record.data['discount_price'],
                 'count': record.data['count'],
                 'image': pocketBase.files.getUrl(record, record.data['image']),
               }))
@@ -49,8 +52,7 @@ class ProductCubit extends Cubit<ProductState> {
                 'image': pocketBase.files.getUrl(record, record.data['image']),
               }))
           .toList();
-      emit(ProductLoaded((state as ProductLoaded).products,
-          productsForCategory: products));
+      emit(ProductLoaded(products, productsForCategory: products));
     } catch (e) {
       emit(ProductError(e.toString()));
     }

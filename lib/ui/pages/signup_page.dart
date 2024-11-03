@@ -1,4 +1,5 @@
 import 'package:dail_bites/bloc/pocketbase/pocketbase_service_cubit.dart';
+import 'package:dail_bites/ui/theme.dart';
 import 'package:dail_bites/ui/widgets/toasts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -132,7 +133,7 @@ class _SignupPageState extends State<SignupPage>
                                     height: 100,
                                     width: 100,
                                     decoration: BoxDecoration(
-                                      color: Colors.blue[900],
+                                      color: AppTheme().primary,
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
@@ -213,7 +214,7 @@ class _SignupPageState extends State<SignupPage>
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue[900]!,
+                                                  color: AppTheme().primary,
                                                   width: 2,
                                                 ),
                                               ),
@@ -252,7 +253,7 @@ class _SignupPageState extends State<SignupPage>
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue[900]!,
+                                                  color: AppTheme().primary,
                                                   width: 2,
                                                 ),
                                               ),
@@ -262,9 +263,8 @@ class _SignupPageState extends State<SignupPage>
                                                   value.isEmpty) {
                                                 return 'Please enter your email';
                                               }
-                                              if (!RegExp(
-                                                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                                  .hasMatch(value)) {
+                                              if (!value.contains('@') ||
+                                                  !value.contains('.')) {
                                                 return 'Please enter a valid email';
                                               }
                                               return null;
@@ -310,7 +310,7 @@ class _SignupPageState extends State<SignupPage>
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue[900]!,
+                                                  color: AppTheme().primary,
                                                   width: 2,
                                                 ),
                                               ),
@@ -367,7 +367,7 @@ class _SignupPageState extends State<SignupPage>
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue[900]!,
+                                                  color: AppTheme().primary,
                                                   width: 2,
                                                 ),
                                               ),
@@ -405,7 +405,8 @@ class _SignupPageState extends State<SignupPage>
                                                       _acceptTerms = value!;
                                                     });
                                                   },
-                                                  activeColor: Colors.blue[900],
+                                                  activeColor:
+                                                      AppTheme().primary,
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
@@ -439,7 +440,8 @@ class _SignupPageState extends State<SignupPage>
                                                   }
                                                 : null,
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.blue[900],
+                                              backgroundColor:
+                                                  AppTheme().primary,
                                               padding:
                                                   const EdgeInsets.symmetric(
                                                 vertical: 16,
@@ -491,7 +493,7 @@ class _SignupPageState extends State<SignupPage>
                                         child: Text(
                                           'Sign In',
                                           style: TextStyle(
-                                            color: Colors.blue[900],
+                                            color: AppTheme().primary,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
