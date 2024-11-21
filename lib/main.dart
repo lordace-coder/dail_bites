@@ -23,6 +23,7 @@ void main() async {
    PWAInstall().setup(installCallback: () {
     debugPrint('APP INSTALLED!');
   });
+
   final AppDataProvider appData = AppDataProvider();
   WidgetsFlutterBinding.ensureInitialized();
   final pref = await SharedPreferences.getInstance();

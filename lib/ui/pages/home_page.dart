@@ -9,6 +9,7 @@ import 'package:dail_bites/ui/theme.dart';
 import 'package:dail_bites/ui/widgets/appbars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pwa_install/pwa_install.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.query});
@@ -22,6 +23,9 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   @override
   Widget build(BuildContext context) {
+    try {
+      PWAInstall().promptInstall_();
+    } catch (e) {}
     final List<Widget> pages = [
       HomeScreen(
         query: widget.query,
