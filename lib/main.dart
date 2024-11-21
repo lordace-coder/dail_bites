@@ -15,10 +15,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pocketbase/pocketbase.dart';
+import 'package:pwa_install/pwa_install.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart' as toast;
 
 void main() async {
+   PWAInstall().setup(installCallback: () {
+    debugPrint('APP INSTALLED!');
+  });
   final AppDataProvider appData = AppDataProvider();
   WidgetsFlutterBinding.ensureInitialized();
   final pref = await SharedPreferences.getInstance();
