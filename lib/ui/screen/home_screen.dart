@@ -225,6 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             return Container(
                               margin: const EdgeInsets.all(8),
+                              padding: EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(10),
                                 image: DecorationImage(

@@ -130,7 +130,7 @@ class _ProductCardState extends State<ProductCard> {
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (widget.product.description != null) ...[
@@ -147,6 +147,7 @@ class _ProductCardState extends State<ProductCard> {
                     ],
                     const SizedBox(height: 8),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         if (widget.product.discountPrice != null) ...[
                           Text(
@@ -157,12 +158,15 @@ class _ProductCardState extends State<ProductCard> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            '₦${widget.product.price}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                              decoration: TextDecoration.lineThrough,
+                          Expanded(
+                            child: Text(
+                              '₦${widget.product.price}',
+                              style: TextStyle(
+                                overflow: TextOverflow.ellipsis,
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                decoration: TextDecoration.lineThrough,
+                              ),
                             ),
                           ),
                         ] else

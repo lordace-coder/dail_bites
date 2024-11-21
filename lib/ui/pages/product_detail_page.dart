@@ -4,6 +4,7 @@ import 'package:dail_bites/bloc/wishlist/cubit.dart';
 import 'package:dail_bites/bloc/wishlist/state.dart';
 import 'package:dail_bites/ui/theme.dart';
 import 'package:dail_bites/ui/widgets/appbars.dart';
+import 'package:dail_bites/ui/widgets/dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -90,6 +91,7 @@ class _ProductDisplayState extends State<ProductDisplay>
 
   @override
   Widget build(BuildContext context) {
+    context.watch<WishlistCubit>();
     return Scaffold(
       appBar: const GenericAppBar(),
       body: Stack(
@@ -271,22 +273,35 @@ class _ProductDisplayState extends State<ProductDisplay>
                                 icon: Icons.remove,
                                 onPressed: _decrementCount,
                               ),
-                              Container(
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 12),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: Colors.grey.shade100,
-                                ),
-                                child: Text(
-                                  count.toString(),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                              GestureDetector(
+                                onTap: () {
+                                  AmountInputDialog.show(
+                                    context,
+                                    onAmountSubmitted: (amount) {
+                                      setState(() {
+                                        count = amount.floor();
+                                      });
+                                      // Handle the amount
+                                    },
+                                  );
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Colors.grey.shade100,
+                                  ),
+                                  child: Text(
+                                    count.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),

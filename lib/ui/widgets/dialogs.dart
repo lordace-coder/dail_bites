@@ -430,3 +430,171 @@ class _EditDetailsSheetState extends State<EditDetailsSheet> {
     );
   }
 }
+
+class AmountInputDialog extends StatefulWidget {
+  final Function(double) onAmountSubmitted;
+  final String title;
+  final String productName;
+  final double? initialAmount;
+  final double? maxAmount;
+
+  const AmountInputDialog({
+    Key? key,
+    required this.onAmountSubmitted,
+    this.title = 'Enter Amount',
+    this.productName = 'product',
+    this.initialAmount,
+    this.maxAmount,
+  }) : super(key: key);
+
+  static Future<void> show(
+    BuildContext context, {
+    required Function(double) onAmountSubmitted,
+    String title = 'Enter Amount',
+    String productName = 'product',
+    double? initialAmount,
+    double? maxAmount,
+  }) {
+    return showDialog(
+      context: context,
+      builder: (context) => AmountInputDialog(
+        onAmountSubmitted: onAmountSubmitted,
+        title: title,
+        productName: productName,
+        initialAmount: initialAmount,
+        maxAmount: maxAmount,
+      ),
+    );
+  }
+
+  @override
+  State<AmountInputDialog> createState() => _AmountInputDialogState();
+}
+
+class _AmountInputDialogState extends State<AmountInputDialog> {
+  late final TextEditingController _controller;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.initialAmount?.toString() ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _validateAndSubmit() {
+    final text = _controller.text;
+    if (text.isEmpty) {
+      setState(() => _errorText = 'Please enter an amount');
+      return;
+    }
+
+    final amount = double.tryParse(text);
+    if (amount == null) {
+      setState(() => _errorText = 'Please enter a valid number');
+      return;
+    }
+
+    if (amount <= 0) {
+      setState(() => _errorText = 'Amount must be greater than 0');
+      return;
+    }
+
+    if (widget.maxAmount != null && amount > widget.maxAmount!) {
+      setState(() => _errorText = 'Amount cannot exceed ${widget.maxAmount}');
+      return;
+    }
+
+    widget.onAmountSubmitted(amount);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              widget.title,
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'How many ${widget.productName}(s) would you like?',
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              textAlign: TextAlign.center,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+              decoration: InputDecoration(
+                hintText: 'Enter amount',
+                errorText: _errorText,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+              onSubmitted: (_) => _validateAndSubmit(),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _validateAndSubmit,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Confirm'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
