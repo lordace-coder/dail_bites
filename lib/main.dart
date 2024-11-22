@@ -19,6 +19,7 @@ import 'package:pwa_install/pwa_install.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart' as toast;
 
+
 void main() async {
    PWAInstall().setup(installCallback: () {
     debugPrint('APP INSTALLED!');

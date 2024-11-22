@@ -7,6 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_paystack_plus/flutter_paystack_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:pocketbase/pocketbase.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:js' as js;
+import 'paystack_interlop.dart' as paystack;
 
 class PaystackPaymentService {
   final PocketBase pb;
@@ -21,25 +24,58 @@ class PaystackPaymentService {
     required String orderId,
     required VoidCallback onSuccess,
   }) async {
-    try {
-      // Convert amount to kobo (multiply by 100)
-      final amountInKobo = (amount * 100).toInt();
+    final amountInKobo = (amount * 100).toInt();
+    final reference = 'TR${DateTime.now().millisecondsSinceEpoch}';
 
-      // Generate reference
-      final reference = 'TR${DateTime.now().millisecondsSinceEpoch}';
+    if (kIsWeb) {
+// handle paystack using web solution
+      print('handling for web');
+      js.context.callMethod(
+        paystack.paystackPopUp(
+          appData.publicKey,
+          email,
+          amountInKobo.toString(),
+          reference,
+          js.allowInterop(() {
+            onSuccess.call();
+          }),
+          js.allowInterop(() {
+            Navigator.of(context).pop();
+            AppRouter().navigateTo(OrderReceipt(orderId: orderId));
+            onSuccess.call();
+          }),
+        ),
+      );
+    } else {
+      try {
+        // Convert amount to kobo (multiply by 100)
 
-      // Initialize payment
-      await FlutterPaystackPlus.openPaystackPopup(
-        context: context,
-        publicKey: appData.publicKey,
-        secretKey: appData.secretKey,
-        amount: amountInKobo.toString(),
-        customerEmail: email,
-        reference: reference,
-        currency: "NGN",
-        metadata: {
-          "custom_fields": [
-            {
+        // Generate reference
+        final reference = 'TR${DateTime.now().millisecondsSinceEpoch}';
+
+        // Initialize payment
+        await FlutterPaystackPlus.openPaystackPopup(
+          context: context,
+          publicKey: appData.publicKey,
+          secretKey: appData.secretKey,
+          amount: amountInKobo.toString(),
+          customerEmail: email,
+          reference: reference,
+          currency: "NGN",
+          metadata: {
+            "custom_fields": [
+              {
+                "email": email,
+                "amount": amount,
+                "reference": reference,
+                "status": 'success',
+                "order": orderId,
+                'currency': "NGN",
+                "date": DateTime.now().toIso8601String(),
+                'user': pb.authStore.model.id,
+              }
+            ],
+            'order_data': {
               "email": email,
               "amount": amount,
               "reference": reference,
@@ -49,31 +85,21 @@ class PaystackPaymentService {
               "date": DateTime.now().toIso8601String(),
               'user': pb.authStore.model.id,
             }
-          ],
-          'order_data': {
-            "email": email,
-            "amount": amount,
-            "reference": reference,
-            "status": 'success',
-            "order": orderId,
-            'currency': "NGN",
-            "date": DateTime.now().toIso8601String(),
-            'user': pb.authStore.model.id,
-          }
-        },
-        onClosed: () {
-          print('cloesed');
-          onSuccess.call();
-        },
-        onSuccess: () {
-          print('success');
-          Navigator.of(context).pop();
-          AppRouter().navigateTo(OrderReceipt(orderId: orderId));
-          onSuccess.call();
-        },
-      );
-    } catch (e) {
-      throw Exception('Payment error: $e');
+          },
+          onClosed: () {
+            print('cloesed');
+            onSuccess.call();
+          },
+          onSuccess: () {
+            print('success');
+            Navigator.of(context).pop();
+            AppRouter().navigateTo(OrderReceipt(orderId: orderId));
+            onSuccess.call();
+          },
+        );
+      } catch (e) {
+        throw Exception('Payment error: $e');
+      }
     }
   }
 }

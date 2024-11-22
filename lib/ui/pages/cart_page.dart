@@ -99,13 +99,14 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildCartContent() {
+    final state = context.watch<CartCubit>().state;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              '${(context.watch<CartCubit>().state as CartLoaded).items.length} items in your cart',
+              '${state is CartLoaded ? (state).items.length : ''} items in your cart',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,

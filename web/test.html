@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+
+    <script>
+      function paystackPopUp(pkTest, email, amount, ref, onClosed, callback) {
+        let handler = PaystackPop.setup({
+          key: pkTest,
+          email: email,
+          amount: amount,
+          ref: ref,
+          onClose: function () {
+            onClosed.call();
+          },
+          callback: function () {
+            callback.call();
+          },
+        });
+        return handler.openIframe();
+      }
+      const handlePayment = () => {
+        paystackPopUp(
+          "pk_live_2fa14872e7ba93c85b153c1da420ba3ce1b8ecbf",
+          "lordyacey@gmail.com",
+          "40000",
+          Date.now().toString(),
+          () => {},
+          () => {}
+        );
+      };
+    </script>
+    <button onclick="handlePayment()">test payment</button>
+  </body>
+</html>

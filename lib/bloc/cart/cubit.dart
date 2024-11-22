@@ -139,14 +139,14 @@ class CartCubit extends Cubit<CartState> {
           email: (pb.authStore.model as RecordModel).getStringValue('email'),
           amount: amount,
           context: context,
-          onSuccess: () {   emit(
-        CartOrderSuccess(
-          orderId: createdData.id,
-        ),
-      );},
+          onSuccess: () {
+            emit(
+              CartOrderSuccess(
+                orderId: createdData.id,
+              ),
+            );
+          },
           orderId: createdData.id);
-
-   
     } catch (e) {
       emit(
           CartError(message: e.toString())); // Add this state to your CartState
@@ -155,6 +155,7 @@ class CartCubit extends Cubit<CartState> {
         title: 'Order Failed',
         description: 'Failed to place order: ${e.toString()}',
       );
+      rethrow;
     }
   }
 

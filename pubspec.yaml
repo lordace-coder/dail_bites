@@ -23,6 +23,7 @@ dependencies:
   intl:
   google_fonts: ^6.2.1
   pwa_install: ^0.0.5
+  js: ^0.6.7
 dev_dependencies:
   flutter_test:
     sdk: flutter
